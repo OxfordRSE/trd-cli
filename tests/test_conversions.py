@@ -38,6 +38,37 @@ class ConversionsTest(TestCase):
                     return
         self.fail(f"No PHQ-9 questionnaire found in {qr_file}")
 
+    def test_gad9(self):
+        qr_file = "fixtures/questionnaireresponse.csv"
+        with open(qr_file, "r") as f:
+            responses = csv.DictReader(f, delimiter="|")
+            for response in responses:
+                if not isinstance(response, dict):
+                    continue
+                io = response.get("interoperability")
+                try:
+                    io = json.loads(io)
+                except json.JSONDecodeError:
+                    continue
+                if io.get("title") == "Anxiety (GAD-7)":
+                    self.assertEqual(
+                        convert_questionnaire(io),
+                        {
+                            "gad7_1_anxious_float": "2.0",
+                            "gad7_2_uncontrollable_worrying_float": "2.0",
+                            "gad7_3_excessive_worrying_float": "1.0",
+                            "gad7_4_relaxing_float": "3.0",
+                            "gad7_5_restless_float": "0.0",
+                            "gad7_6_irritable_float": "1.0",
+                            "gad7_7_afraid_float": "2.0",
+                            "gad7_8_difficult_float": "0.0",
+                            "gad7_datetime": "2024-08-09T11:45:33.1265670+01:00",
+                            "gad7_score_total_float": "11.0"
+                        },
+                    )
+                    return
+        self.fail(f"No GAD-7 questionnaire found in {qr_file}")
+
 
 if __name__ == "__main__":
     main()

@@ -157,6 +157,7 @@ questionnaire_conversions = {
     "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form": convert_consent,
     "Demographics": convert_consent,
     "Depression (PHQ-9)": convert_phq9,
+    "Anxiety (GAD-7)": convert_gad7,
 }
 
 
