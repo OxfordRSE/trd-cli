@@ -1,8 +1,8 @@
-import csv
 import os
-import json
 import unittest
 from redcap import Project
+
+from trd_cli.parse_tc import parse_tc
 
 
 class PlaygroundTestCase(unittest.TestCase):
@@ -21,25 +21,9 @@ class PlaygroundTestCase(unittest.TestCase):
         self.exports = {"_warnings": []}
         for r, d, f in os.walk("../.."):
             for directory in list(filter(lambda x: x.startswith("tcexport"), d)):
-                self.exports[directory] = {}
-                files = os.listdir(os.path.join(r, directory))
-                for file in list(filter(lambda x: x.endswith(".csv"), files)):
-                    with open(os.path.join(r, directory, file), "r") as h:
-                        data = list(csv.DictReader(h, delimiter="|"))
-                        if file == "questionnaireresponse.csv":
-                            for i, row in enumerate(data):
-                                for k, v in row.items():
-                                    if k in ["responses", "scores", "interoperability"]:
-                                        if v == "":
-                                            row[k] = None
-                                            continue
-                                        try:
-                                            row[k] = json.loads(v)
-                                        except json.JSONDecodeError as e:
-                                            self.exports["_warnings"].append(
-                                                f"{directory}/{os.path.basename(file)}[{i}]:{k} - {e} [{v}]"
-                                            )
-                        self.exports[directory][os.path.basename(file)] = data
+                data, warnings = parse_tc(os.path.join(r, directory))
+                self.exports[directory] = data
+                self.exports["_warnings"].extend(warnings)
 
     def test_redcap_package(self):
         project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_secret)
@@ -53,7 +37,7 @@ class PlaygroundTestCase(unittest.TestCase):
                 "study_id": "102",
                 "redcap_repeat_instrument": "phq9",
                 "redcap_repeat_instance": 5,
-                "phq9_1_interest": "3",
+                "phq9_1_interest_float": "3"
             },
         ]
         response = project.import_records(data)

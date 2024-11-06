@@ -2,9 +2,7 @@ import csv
 import json
 from unittest import TestCase, main
 
-from trd_cli.types import (
-    phq9_to_rc,
-)
+from trd_cli.conversions import convert_questionnaire
 
 
 class ConversionsTest(TestCase):
@@ -21,22 +19,20 @@ class ConversionsTest(TestCase):
                 except json.JSONDecodeError:
                     continue
                 if io.get("title") == "Depression (PHQ-9)":
-                    data = io
-                    rc = phq9_to_rc(101, data)
                     self.assertEqual(
-                        rc,
+                        convert_questionnaire(io),
                         {
-                            "study_id": 101,
-                            "phq9_1_interest_int": "2",
-                            "phq9_2_depression_int": "2",
-                            "phq9_3_sleep_int": "2",
-                            "phq9_4_lack_of_energy_int": "3",
-                            "phq9_5_appetite_int": "2",
-                            "phq9_6_view_of_self_int": "3",
-                            "phq9_7_concentration_int": "2",
-                            "phq9_8_movements_int": "1",
-                            "phq9_9_self_harm_int": "3",
-                            "phq9_score_total_int": "20",
+                            "phq9_datetime": "2024-08-15T16:51:10.9141628+01:00",
+                            "phq9_1_interest_float": "2.0",
+                            "phq9_2_depression_float": "2.0",
+                            "phq9_3_sleep_float": "2.0",
+                            "phq9_4_lack_of_energy_float": "3.0",
+                            "phq9_5_appetite_float": "2.0",
+                            "phq9_6_view_of_self_float": "3.0",
+                            "phq9_7_concentration_float": "2.0",
+                            "phq9_8_movements_float": "1.0",
+                            "phq9_9_self_harm_float": "3.0",
+                            "phq9_score_total_float": "20.0",
                         },
                     )
                     return

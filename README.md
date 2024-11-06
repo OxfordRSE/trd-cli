@@ -44,27 +44,59 @@ This in turn allows us to identify whether a participant is already in the datab
 
 ### Other questionnaires
 
-Any other data that we want to store, e.g. the answers to all questionnaires, should be stored in other instruments.
-E.g. we'll want to create an instrument to hold the sharable demographic data, one for the PHQ9, etc.
+#### We save **scores** only
 
-Shared data instruments should have field names prefixed by the instrument name,
-e.g. `demographics_age_int`, `phq9_1_interest_int`, etc.
+The data in REDCap are the **scores** for items on questionnaires. 
+This means that reverse-coded items, etc. are already accounted for.
 
-Fields that record information but _do not appear in the questionnaire_ should use `meta` as their question number:
-`phq9_meta_datetime_datetime`.
+To recover the actual answers that a participant entered, refer to the data dictionary for the scale of interest.
 
-All instruments should have a `datetime_datetime` field to record when the data was collected.
+#### Instrument structure
 
-None of the fields should include validation rules because we're passing data from True Colours,
-which has already validated it.
-Everything is saved as a string, and researchers will have to handle type conversion in their own code.
-We can help by appending the field name with `_[type]` to indicate the type of the data.
+The instruments only exist as a framework for holding data exported from True Colours. 
+This means that we need to provide a very specific structure:
 
-#### Scores
+- Use the scale code as a prefix, and include item number (where applicable), item short description, and data type
+  - E.g. `demo_age_int` or `phq9_1_interest_float`
+- Include a `datetime` field for each instrument to hold the time of completion
+  - E.g. `phq9_datetime`
+  - (the 'datetime' is assumed from the name, and the format is going to be True Colours rather than REDCap)
+- Include `_score_` fields for any scores or subscale scores that are calculated in True Colours
+  - E.g. `phq9_score_total_float`
 
-Scores are calculated in True Colours and should be recorded in the database.
-For each category that is scored, its value should be stored as `[name]_score_[category_name]_[type]`.
-E.g. `phq9_score_total_int`.
+
+#### Using the REDCap data
+
+REDCap records are always exported in `string` format. 
+This means that the data may have to be parsed to be useful.
+The last part of the name of field in a record is an indication of the data type to which it should be converted.
+These types come from True Colours, and their sanity can be checked with reference to the data dictionary for the relevant scale.
+
+REDCap structures the data for repeated instruments such that all potential rows are returned,
+even if their values are not relevant. 
+E.g. given (for brevity) we just have `demo` and `phq9` instruments, the first completion of `demo` be a record like:
+```json
+{
+  "study_id": "REDCap assigned identifier",
+  "redcap_repeat_instrument": "demo",
+  "redcap_repeat_instance": 1,
+  "demo_datetime": "20241105 15:31",
+  "demo_gender_int": "1",
+  "demo_other_fields": "other fields and content",
+  "demo_complete": "2 indicates complete, 1 incomplete; presumably 0 not started?",
+  "phq9_datetime": "",
+  "phq9_1_interest_float": "",
+  "phq9_other_fields": "all these PHQ fields will be blank"
+}
+```
+
+This is true _whether or not `phq9` has been completed first!_
+Even if `phq9` has been completed, the values **will not** be included in the `demo` row. 
+This does make sense.
+
+**Note** that the `redcap_repeat_instance` field is actually an **integer** whereas everything else is a string.
+There doesn't seem to be a way in REDCap to get it to store data values as anything but strings.
+
 
 ## Pre-commit
 

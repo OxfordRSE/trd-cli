@@ -5,6 +5,8 @@ import click
 import pandas
 import requests
 
+from trd_cli.parse_tc import parse_tc
+
 
 @click.command()
 def cli():
@@ -38,15 +40,17 @@ def cli():
         mailto_address = os.environ["MAILTO_ADDRESS"]
         click.echo(" - OK")
 
-        # Connect to the True Colours scp server
+        # Connect to the True Colours scp server and download the zip dump
         click.echo("Downloading True Colours dump from scp server", nl=False)
+        tc_dir = "tc_data"
         subprocess.run(
-            f"scp {true_colours_username}@{true_colours_url} -i {true_colours_secret}",
+            f"scp {true_colours_username}@{true_colours_url} -i {true_colours_secret} dump.zip {tc_dir}/dump.zip",
             check=True,
         )
-
-        # Parse True Colours data into a REDCap-format DataFrame
-        true_colours_data = pandas.read_csv("scp_data.csv")
+        # unzip the archive
+        subprocess.run(f"unzip {tc_dir}/dump.zip", check=True)
+        # We now have a directory of csv files (actually pipe-separated) we can load as a dict
+        tc_data, tc_parse_warnings = parse_tc(tc_dir)
         click.echo(" - OK")
 
         # Download data from the REDCap API
@@ -65,7 +69,7 @@ def cli():
         updated_records = []
         withdrawn_consent_ids = []
         data_deletion_request_ids = []
-        for index, row in true_colours_data.iterrows():
+        for index, row in tc_data.iterrows():
             redcap_record = redcap_data.get(row["record_id"])
             if redcap_record is None:
                 new_records.append(row)

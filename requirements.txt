@@ -1,5 +1,6 @@
 ## The following requirements were added by pip freeze:
 click==8.1.7
 pandas==2.2.3
+pycap==2.6.0
 pydantic==2.9.2
 requests==2.32.3
