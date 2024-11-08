@@ -3,6 +3,7 @@ import json
 import os
 from typing import Tuple
 
+
 def parse_responses(questionnaire_response_data: dict) -> Tuple[dict, list]:
     """
     Return `questionnaire_response_data` with the response fields json-parsed.
@@ -18,11 +19,8 @@ def parse_responses(questionnaire_response_data: dict) -> Tuple[dict, list]:
                 try:
                     row[k] = json.loads(v)
                 except json.JSONDecodeError as e:
-                    warnings.append(
-                        f"L{i}:{k} - {e}{' | ' + v if v else '[Empty]'}"
-                    )
+                    warnings.append(f"L{i}:{k} - {e}{' | ' + v if v else '[Empty]'}")
     return questionnaire_response_data, warnings
-
 
 
 def parse_tc(tc_dir: str) -> Tuple[dict, list]:
@@ -39,8 +37,6 @@ def parse_tc(tc_dir: str) -> Tuple[dict, list]:
             if file == "questionnaireresponse.csv":
                 data, new_warnings = parse_responses(data)
                 for w in new_warnings:
-                    warnings.append(
-                        f"{os.path.basename(file)}:{w}"
-                    )
+                    warnings.append(f"{os.path.basename(file)}:{w}")
             tc_data[os.path.basename(file)] = data
     return tc_data, warnings

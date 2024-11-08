@@ -2,7 +2,6 @@ import os
 import subprocess
 from redcap import Project
 import click
-import pandas
 import requests
 
 from trd_cli.parse_tc import parse_tc

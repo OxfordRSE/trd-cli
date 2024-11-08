@@ -37,7 +37,7 @@ class PlaygroundTestCase(unittest.TestCase):
                 "study_id": "102",
                 "redcap_repeat_instrument": "phq9",
                 "redcap_repeat_instance": 5,
-                "phq9_1_interest_float": "3"
+                "phq9_1_interest_float": "3",
             },
         ]
         response = project.import_records(data)
