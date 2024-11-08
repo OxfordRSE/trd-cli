@@ -6,6 +6,15 @@ import requests
 
 from trd_cli.parse_tc import parse_tc
 
+# Construct a logger that saves logged events to a dictionary that we can attach to an email later
+import logging
+from logging.config import dictConfig
+from trd_cli.log_config import LOGGING_CONFIG
+
+dictConfig(LOGGING_CONFIG)
+
+LOGGER = logging.getLogger(__name__)
+
 
 @click.command()
 def cli():
@@ -98,6 +107,14 @@ def cli():
         added_record_request = redcap_project.import_records(new_records)
         updated_record_request = redcap_project.import_records(updated_records)
         click.echo(" - OK")
+        
+        # Scan logs and count errors and warnings
+        log_file = "trd_cli.log"
+        with open(log_file, "r") as f:
+            log_data = f.read()
+        error_count = log_data.count("ERROR")
+        warning_count = log_data.count("WARNING")   
+        log_content = log_data.replace("\n", "<br />")
 
         # Send email summary
         click.echo("Sending email summary", nl=False)
@@ -155,6 +172,11 @@ def cli():
     </ul>
     {f'Withdrawn Consent IDs: {withdrawn_consent_ids_str}' if len(withdrawn_consent_ids) > 0 else ""}
     {f'Data Deletion Request IDs: {data_deletion_ids_str}' if len(withdrawn_consent_ids) > 0 else ""}
+    <h2>Log Summary:</h2>
+    <details>
+        <summary>Log File ({error_count} Errors, {warning_count} Warnings)</summary>
+        <p>{log_content}</p>
+    </details>
     """
 
         url = f"https://api.mailgun.net/v3/{mailgun_domain}/messages"
