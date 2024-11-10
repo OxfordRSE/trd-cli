@@ -135,7 +135,7 @@ def cli():
 
         # First, search for patients who don't have REDCap entries
         new_records = []
-        for p in tc_data["patients.csv"]:
+        for p in tc_data["patient.csv"]:
             if p.get("id") not in redcap_data:
                 new_records.append(p.get("id"))
                 # Get a new study_id from REDCap
@@ -146,8 +146,17 @@ def cli():
                     {"study_id": study_id, **private},
                     {"study_id": study_id, **info},
                 ])
-        
+        if len(new_records) > 0:
+            LOGGER.info(f"Added {len(new_records)} new records: [{', '.join(new_records)}].")
+
         # Next, check for new questionnaire responses
+        new_responses = []
+        for qr in tc_data["questionnaireresponse.csv"]:
+            id = qr.get("patientid")
+            is_new = id not in redcap_data[q_name] or id not in [x[0] for x in redcap_data[q_name][id]]
+            if id in redcap_data:
+
+
         for index, row in tc_data.iterrows():
             redcap_record = redcap_data.get(row["record_id"])
             if redcap_record is None:

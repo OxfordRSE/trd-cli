@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Tuple
+from typing import Literal, Tuple, List
 
 from typing_extensions import TypedDict
 
@@ -98,8 +98,100 @@ class RCRecordRow(RCRecordMetadata):
     wsas_score_total_float: str
 
 
-def convert_private(data: dict) -> dict:
-    return {}
+class QuestionnaireMetadata(TypedDict):
+    name: str
+    code: str
+    items: List[str]  # QuestionShortName in TrueColours data
+    scores: List[str]  # Name in TrueColours data
+
+
+QUESTIONNAIRES: List[QuestionnaireMetadata] = [
+    {
+        "name": "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form",
+        "code": "consent",
+        "items": [],
+        "scores": [],
+    },
+    {
+        "name": "Demographics",
+        "code": "demo",
+        "items": [],
+        "scores": [],
+    },
+    {
+        "name": "Depression (PHQ-9)",
+        "code": "phq9",
+        "items": [
+            "Interest",
+            "Depression",
+            "Sleep",
+            "Lack of energy",
+            "Appetite",
+            "View of self",
+            "Concentration",
+            "Movements",
+            "Self-harm",
+        ],
+        "scores": ["Total"],
+    },
+    {
+        "name": "Anxiety (GAD-7)",
+        "code": "gad7",
+        "items": [
+            "Anxious",
+            "Uncontrollable worrying",
+            "Excessive worrying",
+            "Relaxing",
+            "Restless",
+            "Irritable",
+            "Afraid",
+            "Difficult",
+        ],
+        "scores": ["Total"],
+    },
+    {
+        "name": "Mania (Altman)",
+        "code": "mania",
+        "items": [
+            "+Happiness",
+            "+Confidence",
+            "-Sleep",
+            "+Talking",
+            "+Activity",
+        ],
+        "scores": ["Total"],
+    },
+    {
+        "name": "ReQoL 10",
+        "code": "reqol10",
+        "items": [
+            "everyday tasks",
+            "trust others",
+            "unable to cope",
+            "do wanted things",
+            "felt happy",
+            "not worth living",
+            "enjoyed",
+            "felt hopeful",
+            "felt lonely",
+            "confident in self",
+            "pysical health",  # sic
+        ],
+        "scores": ["Total"],
+    },
+    {
+        "name": "Work and Social Adjustment Scale",
+        "code": "wsas",
+        "items": [
+            "Work",
+            "Management",
+            "Social leisure",
+            "Private leisure",
+            "Family",
+        ],
+        "scores": ["Total"],
+    },
+]
 
 
 def convert_consent(data: dict) -> dict:
@@ -127,213 +219,44 @@ def convert_demo(data: dict) -> dict:
     }
 
 
-# True Colours item ShortNames for PHQ9
-PHQ9_ITEMS = [
-    "Interest",
-    "Depression",
-    "Sleep",
-    "Lack of energy",
-    "Appetite",
-    "View of self",
-    "Concentration",
-    "Movements",
-    "Self-harm",
-]
-# True Colours score Names for PHQ9
-PHQ9_SCORES = ["Total"]
-
-
-def convert_phq9(data: dict) -> dict:
-    scores = data["scores"]
-    out = {"phq9_response_id": str(data["id"]), "phq9_datetime": str(data["submitted"])}
-    for i, k in enumerate(PHQ9_ITEMS):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
+def convert_generic(questionnaire_response: dict) -> dict:
+    questionnaire = list(
+        filter(
+            lambda q: q["name"] == questionnaire_response["interoperability"]["title"],
+            QUESTIONNAIRES,
         )
-        if not item:
-            LOGGER.warning(f"PHQ9: No {k} in scores")
-            continue
-        out[f"phq9_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
-
-    # Append scores
-    category_scores = scores["CategoryScores"]
-    for c in PHQ9_SCORES:
-        score = next((x for x in category_scores if x["Name"] == c), None)
-        if not score:
-            LOGGER.warning(f"PHQ9: No {c} in category scores")
-            continue
-        out[f"phq9_score_{convert_key(c)}_float"] = str(score["Score"])
-    return out
-
-
-GAD7_ITEMS = [
-    "Anxious",
-    "Uncontrollable worrying",
-    "Excessive worrying",
-    "Relaxing",
-    "Restless",
-    "Irritable",
-    "Afraid",
-    "Difficult",
-]
-GAD7_SCORES = ["Total"]
-
-
-def convert_gad7(data: dict) -> dict:
-    scores = data["scores"]
-    out = {"gad7_response_id": str(data["id"]), "gad7_datetime": str(data["submitted"])}
-    for i, k in enumerate(GAD7_ITEMS):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
-        )
-        if not item:
-            LOGGER.warning(f"GAD7: No {k} in scores")
-            continue
-        out[f"gad7_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
-
-    # Append scores
-    category_scores = scores["CategoryScores"]
-    for c in GAD7_SCORES:
-        score = next((x for x in category_scores if x["Name"] == c), None)
-        if not score:
-            LOGGER.warning(f"GAD7: No {c} in category scores")
-            continue
-        out[f"gad7_score_{convert_key(c)}_float"] = str(score["Score"])
-    return out
-
-
-MANIA_ITEMS = [
-    "+Happiness",
-    "+Confidence",
-    "-Sleep",
-    "+Talking",
-    "+Activity",
-]
-MANIA_SCORES = ["Total"]
-
-
-def convert_mania(data: dict) -> dict:
-    scores = data["scores"]
+    )[0]
+    prefix = questionnaire["code"]
     out = {
-        "mania_response_id": str(data["id"]),
-        "mania_datetime": str(data["submitted"]),
+        f"{prefix}_response_id": str(questionnaire_response["id"]),
+        f"{prefix}_datetime": str(questionnaire_response["submitted"]),
     }
-    for i, k in enumerate(MANIA_ITEMS):
+    scores = questionnaire_response["scores"]
+    for i, k in enumerate(questionnaire["items"]):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
         )
         if not item:
-            LOGGER.warning(f"Mania: No {k} in scores")
+            LOGGER.warning(f"{prefix}: No {k} in scores")
             continue
-        key = (
-            convert_key(k) if k != "-Sleep" else "sleep"
-        )  # - is usually converted to _
-        out[f"mania_{i + 1}_{key}_float"] = str(item["Score"])
+        if k.startswith("-"):
+            out[f"{prefix}_{i + 1}_{convert_key(k[1:])}_float"] = str(item["Score"])
+        else:
+            out[f"{prefix}_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
 
     # Append scores
     category_scores = scores["CategoryScores"]
-    for c in MANIA_SCORES:
+    for c in questionnaire["scores"]:
         score = next((x for x in category_scores if x["Name"] == c), None)
         if not score:
-            LOGGER.warning(f"Mania: No {c} in category scores")
+            LOGGER.warning(f"{prefix}: No {c} in category scores")
             continue
-        out[f"mania_score_{convert_key(c)}_float"] = str(score["Score"])
-    return out
-
-
-REQL10_ITEMS = [
-    "everyday tasks",
-    "trust others",
-    "unable to cope",
-    "do wanted things",
-    "felt happy",
-    "not worth living",
-    "enjoyed",
-    "felt hopeful",
-    "felt lonely",
-    "confident in self",
-    "pysical health",  # sic
-]
-REQL10_SCORES = ["Total"]
-
-
-def convert_reqol10(data: dict) -> dict:
-    scores = data["scores"]
-    out = {
-        "reqol10_response_id": str(data["id"]),
-        "reqol10_datetime": str(data["submitted"]),
-    }
-    for i, k in enumerate(REQL10_ITEMS):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
-        )
-        if not item:
-            LOGGER.warning(f"ReQoL10: No {k} in scores")
-            continue
-        out[f"reqol10_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
-
-    # Append scores
-    category_scores = scores["CategoryScores"]
-    for c in REQL10_SCORES:
-        score = next((x for x in category_scores if x["Name"] == c), None)
-        if not score:
-            LOGGER.warning(f"ReQoL10: No {c} in category scores")
-            continue
-        out[f"reqol10_score_{convert_key(c)}_float"] = str(score["Score"])
-    return out
-
-
-WSAS_ITEMS = [
-    "Work",
-    "Management",
-    "Social leisure",
-    "Private leisure",
-    "Family",
-]
-WSAS_SCORES = ["Total"]
-
-
-def convert_wsas(data: dict) -> dict:
-    scores = data["scores"]
-    out = {"wsas_response_id": str(data["id"]), "wsas_datetime": str(data["submitted"])}
-    for i, k in enumerate(WSAS_ITEMS):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
-        )
-        if not item:
-            LOGGER.warning(f"WSAS: No {k} in scores")
-            continue
-        out[f"wsas_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
-
-    # Append scores
-    category_scores = scores["CategoryScores"]
-    for c in WSAS_SCORES:
-        score = next((x for x in category_scores if x["Name"] == c), None)
-        if not score:
-            LOGGER.warning(f"WSAS: No {c} in category scores")
-            continue
-        out[f"wsas_score_{convert_key(c)}_float"] = str(score["Score"])
+        out[f"{prefix}_score_{convert_key(c)}_float"] = str(score["Score"])
     return out
 
 
 def to_rc_record(metadata: RCRecordMetadata, data: dict):
     return {**metadata, **data}
-
-
-questionnaire_conversions = {
-    "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form": convert_consent,
-    "Demographics": convert_consent,
-    "Depression (PHQ-9)": convert_phq9,
-    "Anxiety (GAD-7)": convert_gad7,
-    "Mania (Altman)": convert_mania,
-    "ReQoL 10": convert_reqol10,
-    "Work and Social Adjustment Scale": convert_wsas,
-}
-
-
-def convert_questionnaire(interoperability_data: dict) -> dict:
-    fn = questionnaire_conversions[interoperability_data["title"]]
-    return fn(interoperability_data)
 
 
 def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:

@@ -27,7 +27,7 @@ class RedcapExtraction(unittest.TestCase):
                 },
             },
             extract_redcap_ids(records),
-        )  
+        )
 
 
 if __name__ == "__main__":
