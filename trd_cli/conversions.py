@@ -1,4 +1,5 @@
-from typing import Literal
+from datetime import datetime
+from typing import Literal, Tuple
 
 from typing_extensions import TypedDict
 
@@ -38,6 +39,7 @@ class RCRecordRow(RCRecordMetadata):
     demo_is_deceased_bool: str
     demo_deceased_datetime: str
     # PHQ9 (Depression)
+    phq9_response_id: str
     phq9_datetime: str
     phq9_1_interest_float: str
     phq9_2_depression_float: str
@@ -50,6 +52,7 @@ class RCRecordRow(RCRecordMetadata):
     phq9_9_self_harm_float: str
     phq9_score_total_float: str
     # GAD7 (Anxiety)
+    gad7_response_id: str
     gad7_datetime: str
     gad7_1_anxious_float: str
     gad7_2_uncontrollable_worrying_float: str
@@ -61,6 +64,7 @@ class RCRecordRow(RCRecordMetadata):
     gad7_8_difficult_float: str
     gad7_score_total_float: str
     # Mania (Altman)
+    mania_response_id: str
     mania_datetime: str
     mania_1_happiness_float: str
     mania_2_confidence_float: str
@@ -69,6 +73,7 @@ class RCRecordRow(RCRecordMetadata):
     mania_5_activity_float: str
     mania_score_total_float: str
     # ReQoL 10
+    reqol10_response_id: str
     reqol10_datetime: str
     reqol10_1_everyday_tasks_float: str
     reqol10_2_trust_others_float: str
@@ -83,6 +88,7 @@ class RCRecordRow(RCRecordMetadata):
     reqol10_11_pysical_health_float: str
     reqol10_score_total_float: str
     # Work and Social Adjustment Scale (WSAS)
+    wsas_response_id: str
     wsas_datetime: str
     wsas_1_work_float: str
     wsas_2_management_float: str
@@ -139,10 +145,7 @@ PHQ9_SCORES = ["Total"]
 
 def convert_phq9(data: dict) -> dict:
     scores = data["scores"]
-    out = {
-        "phq9_response_id": str(data["id"]),
-        "phq9_datetime": str(data["submitted"])
-    }
+    out = {"phq9_response_id": str(data["id"]), "phq9_datetime": str(data["submitted"])}
     for i, k in enumerate(PHQ9_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -178,10 +181,7 @@ GAD7_SCORES = ["Total"]
 
 def convert_gad7(data: dict) -> dict:
     scores = data["scores"]
-    out = {
-        "gad7_response_id": str(data["id"]),
-        "gad7_datetime": str(data["submitted"])
-    }
+    out = {"gad7_response_id": str(data["id"]), "gad7_datetime": str(data["submitted"])}
     for i, k in enumerate(GAD7_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -216,7 +216,7 @@ def convert_mania(data: dict) -> dict:
     scores = data["scores"]
     out = {
         "mania_response_id": str(data["id"]),
-        "mania_datetime": str(data["submitted"])
+        "mania_datetime": str(data["submitted"]),
     }
     for i, k in enumerate(MANIA_ITEMS):
         item = next(
@@ -261,7 +261,7 @@ def convert_reqol10(data: dict) -> dict:
     scores = data["scores"]
     out = {
         "reqol10_response_id": str(data["id"]),
-        "reqol10_datetime": str(data["submitted"])
+        "reqol10_datetime": str(data["submitted"]),
     }
     for i, k in enumerate(REQL10_ITEMS):
         item = next(
@@ -295,10 +295,7 @@ WSAS_SCORES = ["Total"]
 
 def convert_wsas(data: dict) -> dict:
     scores = data["scores"]
-    out = {
-        "wsas_response_id": str(data["id"]),
-        "wsas_datetime": str(data["submitted"])
-    }
+    out = {"wsas_response_id": str(data["id"]), "wsas_datetime": str(data["submitted"])}
     for i, k in enumerate(WSAS_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -334,6 +331,37 @@ questionnaire_conversions = {
 }
 
 
-def convert_questionnaire(data: dict) -> dict:
-    fn = questionnaire_conversions[data["title"]]
-    return fn(data)
+def convert_questionnaire(interoperability_data: dict) -> dict:
+    fn = questionnaire_conversions[interoperability_data["title"]]
+    return fn(interoperability_data)
+
+
+def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
+    """
+    Extract participant info from CSV file.
+
+    Return a dict of `private` information and public `info`rmation.
+    """
+    keep_fields = [
+        "id",
+        "nhsnumber",
+        "birthdate",
+        "contactemail",
+        "mobilenumber",
+        "firstname",
+        "lastname",
+        "preferredcontact",
+    ]
+    now = datetime.now().isoformat()
+
+    return {
+        # YYYY-MM-DD HH:MM:SS.sss format of the current date
+        "datetime": now,
+        **{k: v for k, v in patient_csv_data.items() if k in keep_fields},
+    }, {
+        "info_datetime": now,
+        "info_birthyear_int": patient_csv_data.get("birthdate").split("-")[0],
+        "info_gender_int": patient_csv_data.get("gender"),
+        "info_is_deceased_bool": patient_csv_data.get("deceasedboolean"),
+        "info_deceased_datetime": patient_csv_data.get("deceaseddatetime"),
+    }

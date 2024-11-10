@@ -1,0 +1,68 @@
+[
+  {
+    "study_id": "101",
+    "redcap_repeat_instrument": "private",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-one",
+    "phq9_response_id": "",
+    "gad7_response_id": "",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  },
+  {
+    "study_id": "101",
+    "redcap_repeat_instrument": "phq9",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-one",
+    "phq9_response_id": "1111111",
+    "gad7_response_id": "",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  },
+  {
+    "study_id": "101",
+    "redcap_repeat_instrument": "gad7",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-one",
+    "phq9_response_id": "",
+    "gad7_response_id": "2222222",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  },
+  {
+    "study_id": "101",
+    "redcap_repeat_instrument": "phq9",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-one",
+    "phq9_response_id": "121212",
+    "gad7_response_id": "",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  },
+  {
+    "study_id": "102",
+    "redcap_repeat_instrument": "private",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-two",
+    "phq9_response_id": "",
+    "gad7_response_id": "",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  },
+  {
+    "study_id": "102",
+    "redcap_repeat_instrument": "gad7",
+    "redcap_repeat_instance": 1,
+    "id": "one-oh-two",
+    "phq9_response_id": "",
+    "gad7_response_id": "1231241",
+    "mania_response_id": "",
+    "reqol10_response_id": "",
+    "wsas_response_id": ""
+  }
+]

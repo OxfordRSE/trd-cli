@@ -1,8 +1,9 @@
 import csv
 import json
+from datetime import datetime
 from unittest import TestCase, main
 
-from trd_cli.conversions import convert_questionnaire
+from trd_cli.conversions import convert_questionnaire, extract_participant_info
 
 
 class ConversionsTest(TestCase):
@@ -163,6 +164,41 @@ class ConversionsTest(TestCase):
                     )
                     return
         self.fail(f"No WSAS questionnaire found in {qr_file}")
+
+    def test_extract_info(self):
+        qr_file = "fixtures/patient.csv"
+        with open(qr_file, "r") as f:
+            responses = csv.DictReader(f, delimiter="|")
+            response = next(responses)
+        private, public = extract_participant_info(response)
+        self.assertGreater(datetime.now().isoformat(), private["datetime"])
+        self.assertGreater(datetime.now().isoformat(), public["info_datetime"])
+        private["datetime"] = None
+        public["info_datetime"] = None
+        self.assertEqual(
+            {
+                "birthdate": "1949-11-04",
+                "contactemail": "b.tester@example.com",
+                "firstname": "Besty",
+                "id": "1255217154",
+                "datetime": None,
+                "lastname": "Tester",
+                "mobilenumber": "+44 7000 000000",
+                "nhsnumber": "9910362813",
+                "preferredcontact": "0",
+            },
+            private,
+        )
+        self.assertEqual(
+            {
+                "info_birthyear_int": "1949",
+                "info_datetime": None,
+                "info_deceased_datetime": "",
+                "info_gender_int": "1",
+                "info_is_deceased_bool": "",
+            },
+            public,
+        )
 
 
 if __name__ == "__main__":

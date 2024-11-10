@@ -9,7 +9,6 @@ LOGGER = logging.getLogger(__name__)
 def parse_responses(questionnaire_response_data: list) -> list:
     """
     Return `questionnaire_response_data` with the response fields json-parsed.
-    The second return is a list of warnings generated during processing.
     """
     for i, row in enumerate(questionnaire_response_data):
         for k, v in row.items():
@@ -27,7 +26,6 @@ def parse_responses(questionnaire_response_data: list) -> list:
 def parse_tc(tc_dir: str) -> dict:
     """
     Return a dictionary of parsed .csv files in a True Colours export directory.
-    The second return is a list of warnings generated during processing.
     """
     tc_data = {}
     files = os.listdir(tc_dir)

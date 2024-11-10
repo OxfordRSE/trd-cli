@@ -32,7 +32,9 @@ class PlaygroundTestCase(unittest.TestCase):
         self.assertIn("nhsnumber", records[0])
 
     def test_redcap_package_researcher(self):
-        project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_researcher_secret)
+        project = Project(
+            "https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_researcher_secret
+        )
         records = project.export_records()
         self.assertGreater(len(records), 0)
         self.assertNotIn("nhsnumber", records[0])

@@ -1,9 +1,11 @@
 import os
 import subprocess
+
 from redcap import Project
 import click
 import requests
 
+from trd_cli.conversions import extract_participant_info
 from trd_cli.parse_tc import parse_tc
 
 # Construct a logger that saves logged events to a dictionary that we can attach to an email later
@@ -14,6 +16,58 @@ from trd_cli.log_config import LOGGING_CONFIG
 dictConfig(LOGGING_CONFIG)
 
 LOGGER = logging.getLogger(__name__)
+
+questionnaire_names = ["phq9", "gad7", "mania", "reqol10", "wsas"]
+
+
+def extract_redcap_ids(records) -> dict:
+    """
+    Get a list of participants from REDCap.
+    Each one will have a `study_id` (REDCap Id) and `id` our `patient.csv` `id` field.
+    Each one will also have the `_response_id` for each questionnaire recorded in REDCap.
+
+    Return a dictionary of `id`: with the `study_id` and the names of each questionnaire containing
+    a list of tuples of (`_response_id`, `redcap_repeat_instance`) for all responses for that questionnaire.
+    """
+    ids = set([r.get("id") for r in records])
+    out = {}
+    for id in ids:
+        subset = list(filter(lambda x: x["id"] == id, records))
+        if not all([s.get("study_id") == subset[0].get("study_id") for s in subset]):
+            LOGGER.warning(
+                (
+                    f"Subset of {id} does not have the `study_id` field. Unique ids: "
+                    f"{', '.join(set([s.get('study_id') for s in subset]))}."
+                )
+            )
+        qr = {n: [] for n in questionnaire_names}
+        for s in subset:
+            q_name = s.get("redcap_repeat_instrument")
+            if q_name in qr.keys():
+                if s.get(f"{q_name}_response_id") in list(
+                    map(lambda x: x[0], qr[q_name])
+                ):
+                    if (
+                        s.get("redcap_repeat_instance")
+                        != qr[f"{q_name}_response_id"][1]
+                    ):
+                        LOGGER.warning(
+                            (
+                                f"{q_name}[{s.get(f'{q_name}_response_id')}] "
+                                f"has instance {s.get('redcap_repeat_instance')}, "
+                                f"but this id is already associated with instance {qr[f'{q_name}_response_id'][1]}."
+                            )
+                        )
+                    continue
+                qr[q_name].append(
+                    (s.get(f"{q_name}_response_id"), s.get("redcap_repeat_instance"))
+                )
+            else:
+                LOGGER.warning(
+                    f"Unrecognised `redcap_repeat_instrument` value: {q_name}"
+                )
+        out[id] = {"study_id": subset[0]["study_id"], **qr}
+    return out
 
 
 @click.command()
@@ -64,19 +118,36 @@ def cli():
         # Download data from the REDCap API
         click.echo("Downloading data from REDCap", nl=False)
         redcap_project = Project(redcap_url, redcap_secret)
-        redcap_data = redcap_project.export_records()
+        redcap_records = redcap_project.export_records(
+            fields=[
+                "study_id",
+                "id",
+                "redcap_repeat_instrument",
+                "redcap_repeat_instance",
+                *[f"{n}_record_id" for n in questionnaire_names],
+            ]
+        )
+        redcap_data = extract_redcap_ids(redcap_records)
         click.echo(" - OK")
 
         # Compare the True Colours data to the REDCap data
-        # If consent has been withdrawn and data removal is required, remove the data from the REDCap project
-        # If consent has been withdrawn, alert the data manager via email
-        # If there are new data, add to the REDCap project
-        # If there are data discrepancies, alert the data manager via email
         click.echo("Comparing True Colours data to REDCap data", nl=False)
+
+        # First, search for patients who don't have REDCap entries
         new_records = []
-        updated_records = []
-        withdrawn_consent_ids = []
-        data_deletion_request_ids = []
+        for p in tc_data["patients.csv"]:
+            if p.get("id") not in redcap_data:
+                new_records.append(p.get("id"))
+                # Get a new study_id from REDCap
+                study_id = redcap_project.generate_next_record_name()
+                # Upload private and info fields
+                private, info = extract_participant_info(p)
+                redcap_project.import_records([
+                    {"study_id": study_id, **private},
+                    {"study_id": study_id, **info},
+                ])
+        
+        # Next, check for new questionnaire responses
         for index, row in tc_data.iterrows():
             redcap_record = redcap_data.get(row["record_id"])
             if redcap_record is None:
@@ -107,13 +178,13 @@ def cli():
         added_record_request = redcap_project.import_records(new_records)
         updated_record_request = redcap_project.import_records(updated_records)
         click.echo(" - OK")
-        
+
         # Scan logs and count errors and warnings
         log_file = "trd_cli.log"
         with open(log_file, "r") as f:
             log_data = f.read()
         error_count = log_data.count("ERROR")
-        warning_count = log_data.count("WARNING")   
+        warning_count = log_data.count("WARNING")
         log_content = log_data.replace("\n", "<br />")
 
         # Send email summary
@@ -198,6 +269,7 @@ def cli():
 
     except Exception as e:
         click.echo(" - ERROR")
+        LOGGER.exception(e)
         raise e
 
 
