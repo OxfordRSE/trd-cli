@@ -21,6 +21,7 @@ class ConversionsTest(TestCase):
                 if io.get("title") == "Depression (PHQ-9)":
                     self.assertEqual(
                         {
+                            "phq9_response_id": "1589930675",
                             "phq9_datetime": "2024-11-04T12:59:24.9477348+00:00",
                             "phq9_1_interest_float": "3.0",
                             "phq9_2_depression_float": "3.0",
@@ -53,6 +54,7 @@ class ConversionsTest(TestCase):
                 if io.get("title") == "Anxiety (GAD-7)":
                     self.assertEqual(
                         {
+                            "gad7_response_id": "453451573",
                             "gad7_1_anxious_float": "2.0",
                             "gad7_2_uncontrollable_worrying_float": "2.0",
                             "gad7_3_excessive_worrying_float": "1.0",
@@ -84,6 +86,7 @@ class ConversionsTest(TestCase):
                 if io.get("title") == "Mania (Altman)":
                     self.assertEqual(
                         {
+                            "mania_response_id": "976453020",
                             "mania_1_happiness_float": "1.0",
                             "mania_2_confidence_float": "1.0",
                             "mania_3_sleep_float": "1.0",
@@ -112,6 +115,7 @@ class ConversionsTest(TestCase):
                 if io.get("title") == "ReQoL 10":
                     self.assertEqual(
                         {
+                            "reqol10_response_id": "1504524233",
                             "reqol10_datetime": "2024-11-05T12:07:38.7956557+00:00",
                             "reqol10_1_everyday_tasks_float": "3.0",
                             "reqol10_2_trust_others_float": "2.0",
@@ -146,6 +150,7 @@ class ConversionsTest(TestCase):
                 if io.get("title") == "Work and Social Adjustment Scale":
                     self.assertEqual(
                         {
+                            "wsas_response_id": "1212115884",
                             "wsas_datetime": "2024-11-05T12:08:48.0135908+00:00",
                             "wsas_1_work_float": "3.0",
                             "wsas_2_management_float": "5.0",

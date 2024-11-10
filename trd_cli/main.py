@@ -58,7 +58,7 @@ def cli():
         # unzip the archive
         subprocess.run(f"unzip {tc_dir}/dump.zip", check=True)
         # We now have a directory of csv files (actually pipe-separated) we can load as a dict
-        tc_data, tc_parse_warnings = parse_tc(tc_dir)
+        tc_data = parse_tc(tc_dir)
         click.echo(" - OK")
 
         # Download data from the REDCap API

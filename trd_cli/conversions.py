@@ -139,7 +139,10 @@ PHQ9_SCORES = ["Total"]
 
 def convert_phq9(data: dict) -> dict:
     scores = data["scores"]
-    out = {"phq9_datetime": str(data["submitted"])}
+    out = {
+        "phq9_response_id": str(data["id"]),
+        "phq9_datetime": str(data["submitted"])
+    }
     for i, k in enumerate(PHQ9_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -175,7 +178,10 @@ GAD7_SCORES = ["Total"]
 
 def convert_gad7(data: dict) -> dict:
     scores = data["scores"]
-    out = {"gad7_datetime": str(data["submitted"])}
+    out = {
+        "gad7_response_id": str(data["id"]),
+        "gad7_datetime": str(data["submitted"])
+    }
     for i, k in enumerate(GAD7_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -208,7 +214,10 @@ MANIA_SCORES = ["Total"]
 
 def convert_mania(data: dict) -> dict:
     scores = data["scores"]
-    out = {"mania_datetime": str(data["submitted"])}
+    out = {
+        "mania_response_id": str(data["id"]),
+        "mania_datetime": str(data["submitted"])
+    }
     for i, k in enumerate(MANIA_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -250,7 +259,10 @@ REQL10_SCORES = ["Total"]
 
 def convert_reqol10(data: dict) -> dict:
     scores = data["scores"]
-    out = {"reqol10_datetime": str(data["submitted"])}
+    out = {
+        "reqol10_response_id": str(data["id"]),
+        "reqol10_datetime": str(data["submitted"])
+    }
     for i, k in enumerate(REQL10_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
@@ -283,7 +295,10 @@ WSAS_SCORES = ["Total"]
 
 def convert_wsas(data: dict) -> dict:
     scores = data["scores"]
-    out = {"wsas_datetime": str(data["submitted"])}
+    out = {
+        "wsas_response_id": str(data["id"]),
+        "wsas_datetime": str(data["submitted"])
+    }
     for i, k in enumerate(WSAS_ITEMS):
         item = next(
             (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
