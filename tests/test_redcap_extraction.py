@@ -1,6 +1,6 @@
 import unittest
 import json
-from trd_cli.main import extract_redcap_ids
+from trd_cli.main_functions import extract_redcap_ids
 
 
 class RedcapExtraction(unittest.TestCase):

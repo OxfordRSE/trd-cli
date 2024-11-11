@@ -1,10 +1,9 @@
+import json
 from unittest import mock, TestCase, main
 from click.testing import CliRunner
 from click.core import Command
 import os
-import pandas
 import subprocess
-import requests
 
 from trd_cli.main import cli
 
@@ -31,18 +30,34 @@ class CliTest(TestCase):
         self.subprocess_run_mock = self.enterContext(
             mock.patch("subprocess.run", autospec=True)
         )
-        self.pandas_read_csv_mock = self.enterContext(
-            mock.patch("pandas.read_csv", autospec=True)
-        )
         self.redcap_project_mock = self.enterContext(
             mock.patch("trd_cli.main.Project", autospec=True)
         )
+        self.parse_tc_mock = self.enterContext(
+            mock.patch("trd_cli.main.parse_tc", autospec=True)
+        )        
         self.requests_post_mock = self.enterContext(
             mock.patch("requests.post", autospec=True)
         )
+        
+        def load_tc_data_side_effect(*_args, **_kwargs):
+            with open("fixtures/tc_data.json", "r") as f:
+                return json.load(f)
+
+        # Mocking the parse_tc function to return the data from fixtures/tc_data.json
+        self.parse_tc_mock.side_effect = load_tc_data_side_effect
+        
+        def export_records_side_effect(*_args, **_kwargs):
+            with open("fixtures/redcap_export.json", "r") as f:
+                return json.load(f)
+
+        # Mocking the export_records method to return the data from fixtures/redcap_export.json
+        self.redcap_project_mock.return_value.export_records.side_effect = (
+            export_records_side_effect
+        )
 
         # Set side effect for import_records method of the redcap Project mock
-        def import_records_side_effect(records, *args, **kwargs):
+        def import_records_side_effect(records, *_args, **_kwargs):
             return {"count": len(records)}
 
         # Mocking the import_records method to return {'count': len(records)}
@@ -75,36 +90,7 @@ class CliTest(TestCase):
     def test_email_content(self):
         """Test email content correctness when there are new records, updates, and withdrawn consent."""
         self.subprocess_run_mock.return_value = 0
-        self.pandas_read_csv_mock.return_value = pandas.DataFrame(
-            {
-                "record_id": [1, 2, 3],
-                "consent_withdrawn": ["No", "No", "Yes"],
-                "data_removal_request": ["No", "No", "Yes"],
-                "column1": [1, 2, 3],
-                "column2": [4, 5, 6],
-                "column3": [7, 8, 9],
-            }
-        )
-
-        # Mock REDCap data
-        self.redcap_project_mock.return_value.export_records.return_value = {
-            2: {
-                "record_id": 2,
-                "column1": 1,
-                "column2": 1,
-                "column3": 1,
-                "consent_withdrawn": "No",
-                "data_removal_request": "No",
-            },
-            3: {
-                "record_id": 3,
-                "column1": 3,
-                "column2": 6,
-                "column3": 9,
-                "consent_withdrawn": "No",
-                "data_removal_request": "No",
-            },
-        }
+        self.parse_tc_mock.return_value = {}
 
         runner = CliRunner()
         result = runner.invoke(cli)
