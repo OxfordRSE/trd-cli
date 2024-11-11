@@ -1,3 +1,4 @@
+import json
 import os
 
 from redcap import Project
@@ -76,21 +77,23 @@ def cli():
         # Compare the True Colours data to the REDCap data
         click.echo("Comparing True Colours data to REDCap data", nl=False)
 
-        new_participants, new_responses = compare_tc_to_rc(tc_data, redcap_data)
+        new_participants, new_responses = compare_tc_to_rc(redcap_data, tc_data)
         new_participants_success_count = 0
 
+        id_map = {}
         if len(new_participants) > 0:
             LOGGER.info(
                 f"Added {len(new_participants)} new records: {', '.join(new_participants)}."
             )
-            for pid, data in new_participants.items():
+            for p_id, data in new_participants.items():
                 try:
                     new_id = redcap_project.generate_next_record_name()
+                    id_map[p_id] = new_id
                     rc_response = redcap_project.import_records([
                         {"study_id": new_id, **data["private"]},
                         {"study_id": new_id, **data["info"]},
                     ])
-                    assert rc_response["count"] == 2, f"Failed to import record for {pid}."
+                    assert rc_response["count"] == 2, f"Failed to import record for {p_id}."
                     new_participants_success_count += 1
                 except Exception as e:
                     LOGGER.exception(e)
@@ -99,10 +102,19 @@ def cli():
             LOGGER.info(
                 (
                     f"Added {len(new_responses)} new questionnaire responses: "
-                    f"{', '.join([x['study_id'] for x in new_responses])}."
+                    f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
                 )
             )
-            rc_response_r = redcap_project.import_records(new_responses)
+            patched_responses = []
+            for r in new_responses:
+                if r["study_id"].startswith("__NEW__"):
+                    p_id = r["study_id"][7:]
+                    if p_id not in id_map:
+                        LOGGER.error(f"{p_id} not in id_map for response {json.dumps(r)}")
+                    else:
+                        r["study_id"] = id_map[p_id]
+                patched_responses.append(r)
+            rc_response_r = redcap_project.import_records(patched_responses)
             if rc_response_r["count"] != len(new_responses):
                 LOGGER.error(
                     (
@@ -200,7 +212,8 @@ def cli():
     except Exception as e:
         click.echo(" - ERROR")
         LOGGER.exception(e)
-        raise e
+        click.echo(f"{e.__class__.__name__}: {e}", err=True)
+        exit(1)
 
 
 if __name__ == "__main__":

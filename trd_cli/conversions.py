@@ -194,6 +194,10 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
 ]
 
 
+def get_code_by_name(name: str) -> str:
+    return list([q["code"] for q in QUESTIONNAIRES if q["name"] == name])[0]
+
+
 def convert_consent(data: dict) -> dict:
     out = {
         "consent_datetime": data["submitted"],

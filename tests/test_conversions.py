@@ -5,8 +5,7 @@ from unittest import TestCase, main
 
 from trd_cli.conversions import (
     extract_participant_info,
-    QUESTIONNAIRES,
-    questionnaire_to_rc_record,
+    questionnaire_to_rc_record, get_code_by_name,
 )
 from trd_cli.parse_tc import parse_tc
 
@@ -85,9 +84,7 @@ class ConversionsTest(TestCase):
             interop = r.get("interoperability")
             if interop is not None:
                 q_title = interop.get("title")
-                q_code = list(filter(lambda q: q["name"] == q_title, QUESTIONNAIRES))[
-                    0
-                ]["code"]
+                q_code = get_code_by_name(q_title)
                 if q_code is not None and q_code not in done:
                     with self.subTest(q_name=q_code):
                         done.append(q_code)
