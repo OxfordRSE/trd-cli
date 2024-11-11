@@ -194,6 +194,10 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
 ]
 
 
+def get_code_by_name(name: str) -> str:
+    return list([q["code"] for q in QUESTIONNAIRES if q["name"] == name])[0]
+
+
 def convert_consent(data: dict) -> dict:
     out = {
         "consent_datetime": data["submitted"],
@@ -229,7 +233,9 @@ def convert_generic(questionnaire_response: dict) -> dict:
     prefix = questionnaire["code"]
     out = {
         f"{prefix}_response_id": str(questionnaire_response["id"]),
-        f"{prefix}_datetime": str(questionnaire_response["interoperability"]["submitted"]),
+        f"{prefix}_datetime": str(
+            questionnaire_response["interoperability"]["submitted"]
+        ),
     }
     scores = questionnaire_response["scores"]
     for i, k in enumerate(questionnaire["items"]):
@@ -257,6 +263,21 @@ def convert_generic(questionnaire_response: dict) -> dict:
 
 def to_rc_record(metadata: RCRecordMetadata, data: dict):
     return {**metadata, **data}
+
+
+def questionnaire_to_rc_record(questionnaire_response: dict) -> dict:
+    """
+    Convert a questionnaire response to a REDCap record.
+    """
+    q_name = questionnaire_response["interoperability"]["title"]
+    if (
+        q_name
+        == "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form"
+    ):
+        return convert_consent(questionnaire_response)
+    if q_name == "Demographics":
+        return convert_demo(questionnaire_response)
+    return convert_generic(questionnaire_response)
 
 
 def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:

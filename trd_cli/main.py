@@ -1,12 +1,14 @@
+import json
 import os
-import subprocess
 
 from redcap import Project
 import click
 import requests
 
-from trd_cli.conversions import extract_participant_info
-from trd_cli.parse_tc import parse_tc
+from trd_cli.conversions import (
+    QUESTIONNAIRES,
+)
+from trd_cli.main_functions import extract_redcap_ids, get_true_colours_data, compare_tc_to_rc
 
 # Construct a logger that saves logged events to a dictionary that we can attach to an email later
 import logging
@@ -16,58 +18,6 @@ from trd_cli.log_config import LOGGING_CONFIG
 dictConfig(LOGGING_CONFIG)
 
 LOGGER = logging.getLogger(__name__)
-
-questionnaire_names = ["phq9", "gad7", "mania", "reqol10", "wsas"]
-
-
-def extract_redcap_ids(records) -> dict:
-    """
-    Get a list of participants from REDCap.
-    Each one will have a `study_id` (REDCap Id) and `id` our `patient.csv` `id` field.
-    Each one will also have the `_response_id` for each questionnaire recorded in REDCap.
-
-    Return a dictionary of `id`: with the `study_id` and the names of each questionnaire containing
-    a list of tuples of (`_response_id`, `redcap_repeat_instance`) for all responses for that questionnaire.
-    """
-    ids = set([r.get("id") for r in records])
-    out = {}
-    for id in ids:
-        subset = list(filter(lambda x: x["id"] == id, records))
-        if not all([s.get("study_id") == subset[0].get("study_id") for s in subset]):
-            LOGGER.warning(
-                (
-                    f"Subset of {id} does not have the `study_id` field. Unique ids: "
-                    f"{', '.join(set([s.get('study_id') for s in subset]))}."
-                )
-            )
-        qr = {n: [] for n in questionnaire_names}
-        for s in subset:
-            q_name = s.get("redcap_repeat_instrument")
-            if q_name in qr.keys():
-                if s.get(f"{q_name}_response_id") in list(
-                    map(lambda x: x[0], qr[q_name])
-                ):
-                    if (
-                        s.get("redcap_repeat_instance")
-                        != qr[f"{q_name}_response_id"][1]
-                    ):
-                        LOGGER.warning(
-                            (
-                                f"{q_name}[{s.get(f'{q_name}_response_id')}] "
-                                f"has instance {s.get('redcap_repeat_instance')}, "
-                                f"but this id is already associated with instance {qr[f'{q_name}_response_id'][1]}."
-                            )
-                        )
-                    continue
-                qr[q_name].append(
-                    (s.get(f"{q_name}_response_id"), s.get("redcap_repeat_instance"))
-                )
-            else:
-                LOGGER.warning(
-                    f"Unrecognised `redcap_repeat_instrument` value: {q_name}"
-                )
-        out[id] = {"study_id": subset[0]["study_id"], **qr}
-    return out
 
 
 @click.command()
@@ -104,15 +54,9 @@ def cli():
 
         # Connect to the True Colours scp server and download the zip dump
         click.echo("Downloading True Colours dump from scp server", nl=False)
-        tc_dir = "tc_data"
-        subprocess.run(
-            f"scp {true_colours_username}@{true_colours_url} -i {true_colours_secret} dump.zip {tc_dir}/dump.zip",
-            check=True,
+        tc_data = get_true_colours_data(
+            true_colours_secret, true_colours_url, true_colours_username
         )
-        # unzip the archive
-        subprocess.run(f"unzip {tc_dir}/dump.zip", check=True)
-        # We now have a directory of csv files (actually pipe-separated) we can load as a dict
-        tc_data = parse_tc(tc_dir)
         click.echo(" - OK")
 
         # Download data from the REDCap API
@@ -124,7 +68,7 @@ def cli():
                 "id",
                 "redcap_repeat_instrument",
                 "redcap_repeat_instance",
-                *[f"{n}_record_id" for n in questionnaire_names],
+                *[f"{n}_record_id" for n in [q["code"] for q in QUESTIONNAIRES]],
             ]
         )
         redcap_data = extract_redcap_ids(redcap_records)
@@ -133,60 +77,56 @@ def cli():
         # Compare the True Colours data to the REDCap data
         click.echo("Comparing True Colours data to REDCap data", nl=False)
 
-        # First, search for patients who don't have REDCap entries
-        new_records = []
-        for p in tc_data["patient.csv"]:
-            if p.get("id") not in redcap_data:
-                new_records.append(p.get("id"))
-                # Get a new study_id from REDCap
-                study_id = redcap_project.generate_next_record_name()
-                # Upload private and info fields
-                private, info = extract_participant_info(p)
-                redcap_project.import_records([
-                    {"study_id": study_id, **private},
-                    {"study_id": study_id, **info},
-                ])
-        if len(new_records) > 0:
-            LOGGER.info(f"Added {len(new_records)} new records: [{', '.join(new_records)}].")
+        new_participants, new_responses = compare_tc_to_rc(redcap_data, tc_data)
+        new_participants_success_count = 0
 
-        # Next, check for new questionnaire responses
-        new_responses = []
-        for qr in tc_data["questionnaireresponse.csv"]:
-            id = qr.get("patientid")
-            is_new = id not in redcap_data[q_name] or id not in [x[0] for x in redcap_data[q_name][id]]
-            if id in redcap_data:
+        id_map = {}
+        if len(new_participants) > 0:
+            LOGGER.info(
+                f"Added {len(new_participants)} new records: {', '.join(new_participants)}."
+            )
+            for p_id, data in new_participants.items():
+                try:
+                    new_id = redcap_project.generate_next_record_name()
+                    id_map[p_id] = new_id
+                    rc_response = redcap_project.import_records([
+                        {"study_id": new_id, **data["private"]},
+                        {"study_id": new_id, **data["info"]},
+                    ])
+                    assert rc_response["count"] == 2, f"Failed to import record for {p_id}."
+                    new_participants_success_count += 1
+                except Exception as e:
+                    LOGGER.exception(e)
 
-
-        for index, row in tc_data.iterrows():
-            redcap_record = redcap_data.get(row["record_id"])
-            if redcap_record is None:
-                new_records.append(row)
-            else:
-                for field in row.keys():
-                    # Check if consent has been withdrawn
-                    if field == "consent_withdrawn" and row[field] == "Yes":
-                        withdrawn_consent_ids.append(row["record_id"])
-                        if row["data_removal_request"] == "Yes":
-                            data_deletion_request_ids.append(row["record_id"])
-                    if redcap_record[field] != row[field]:
-                        updated_records.append(row)
-        click.echo(" - OK")
-        click.echo(
-            f"\tRecords: {len(new_records)} new, {len(updated_records)} updated."
-        )
-        if len(withdrawn_consent_ids) > 0:
-            click.echo(
+        if len(new_responses) > 0:
+            LOGGER.info(
                 (
-                    f"\tWithdrawn consent: {len(withdrawn_consent_ids)} participants, "
-                    f"{len(data_deletion_request_ids)} request data deletion."
+                    f"Added {len(new_responses)} new questionnaire responses: "
+                    f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
                 )
             )
+            patched_responses = []
+            for r in new_responses:
+                if r["study_id"].startswith("__NEW__"):
+                    p_id = r["study_id"][7:]
+                    if p_id not in id_map:
+                        LOGGER.error(f"{p_id} not in id_map for response {json.dumps(r)}")
+                    else:
+                        r["study_id"] = id_map[p_id]
+                patched_responses.append(r)
+            rc_response_r = redcap_project.import_records(patched_responses)
+            if rc_response_r["count"] != len(new_responses):
+                LOGGER.error(
+                    (
+                        f"Failed to import all new questionnaire responses. "
+                        f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
+                    )
+                )
 
-        # Update the REDCap project
-        click.echo("Updating REDCap project", nl=False)
-        added_record_request = redcap_project.import_records(new_records)
-        updated_record_request = redcap_project.import_records(updated_records)
         click.echo(" - OK")
+        click.echo(
+            f"\t{len(new_participants)} new participants; {len(new_responses)} new responses."
+        )
 
         # Scan logs and count errors and warnings
         log_file = "trd_cli.log"
@@ -198,65 +138,58 @@ def cli():
 
         # Send email summary
         click.echo("Sending email summary", nl=False)
-        if added_record_request["count"] != len(new_records):
-            added_record_str = (
-                f"<strong>{added_record_request['count']}/{len(new_records)}</strong>"
-            )
+        if new_participants_success_count != len(new_participants):
+            added_participant_str = f"<strong>{new_participants_success_count}/{len(new_participants)}</strong>"
         else:
-            added_record_str = f"{len(new_records)}" if len(new_records) > 0 else None
-        if updated_record_request["count"] != len(updated_records):
-            updated_record_str = f"<strong>{updated_record_request['count']}/{len(updated_records)}</strong>"
-        else:
-            updated_record_str = (
-                f"{len(updated_records)}" if len(updated_records) > 0 else None
+            added_participant_str = (
+                f"{len(new_participants)}" if len(new_participants) > 0 else None
             )
-        withdrawn_record_str = (
-            f"{len(withdrawn_consent_ids)}" if len(withdrawn_consent_ids) > 0 else None
-        )
-        data_deletion_request_str = (
-            f"{len(data_deletion_request_ids)}"
-            if len(data_deletion_request_ids) > 0
-            else None
-        )
+        if len(new_responses) == 0:
+            updated_record_str = None
+        else:
+            if rc_response_r["count"] != len(
+                new_responses
+            ):  # rc_response_r exists if new_responses > 0
+                updated_record_str = (
+                    f"<strong>{rc_response_r['count']}/{len(new_responses)}</strong>"
+                )
+            else:
+                updated_record_str = f"{len(new_responses)}"
 
         if (
-            not added_record_str
+            not added_participant_str
             and not updated_record_str
-            and not withdrawn_record_str
-            and not data_deletion_request_str
+            and error_count == 0
+            and warning_count == 0
         ):
             click.echo(" - SKIPPED: No changes detected.")
             return
 
-        if len(withdrawn_consent_ids):
-            withdrawn_consent_ids_str = ", ".join(
-                [str(x) for x in withdrawn_consent_ids]
-            )
+        if not added_participant_str and not updated_record_str:
+            change_list = None
         else:
-            withdrawn_consent_ids_str = ""
-
-        if len(data_deletion_request_ids):
-            data_deletion_ids_str = ", ".join(
-                [str(x) for x in data_deletion_request_ids]
-            )
-        else:
-            data_deletion_ids_str = "No data deletion requests."
+            change_list = f"""
+<h2>Changes</h2>
+    <ul>
+        {f'< li > New Participants: {added_participant_str}</li>' if added_participant_str else ""}
+        {f'< li > New Responses: {updated_record_str}</li>' if updated_record_str else ""}
+    </ul>
+</h2>
+            """
 
         email_html = f"""
-    <h1>True Colours -> REDCap Data Comparison Summary:</h1>
-    <ul>
-        {f'< li > Added New Records: {added_record_str}</li>' if added_record_str else ""}
-        {f'< li > Updated Records: {updated_record_str}</li>' if updated_record_str else ""}
-        {f'< li > Withdrawn Consent: {len(withdrawn_consent_ids)} participants</li>' if withdrawn_consent_ids else ""}
-        {f'< li > Data Deletion Requests: {len(data_deletion_request_ids)}</li>' if data_deletion_request_ids else ""}
-    </ul>
-    {f'Withdrawn Consent IDs: {withdrawn_consent_ids_str}' if len(withdrawn_consent_ids) > 0 else ""}
-    {f'Data Deletion Request IDs: {data_deletion_ids_str}' if len(withdrawn_consent_ids) > 0 else ""}
-    <h2>Log Summary:</h2>
+<html>
+<body>
+<h1>True Colours -> REDCap Data Comparison Summary</h1>
+{change_list if change_list else ""}
+<h2>Log Summary</h2>
     <details>
         <summary>Log File ({error_count} Errors, {warning_count} Warnings)</summary>
         <p>{log_content}</p>
     </details>
+</h2>
+</body>
+</html>
     """
 
         url = f"https://api.mailgun.net/v3/{mailgun_domain}/messages"
@@ -279,7 +212,8 @@ def cli():
     except Exception as e:
         click.echo(" - ERROR")
         LOGGER.exception(e)
-        raise e
+        click.echo(f"{e.__class__.__name__}: {e}", err=True)
+        exit(1)
 
 
 if __name__ == "__main__":

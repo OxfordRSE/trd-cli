@@ -3,7 +3,10 @@ from datetime import datetime
 from time import sleep
 from unittest import TestCase, main
 
-from trd_cli.conversions import convert_generic, extract_participant_info, QUESTIONNAIRES
+from trd_cli.conversions import (
+    extract_participant_info,
+    questionnaire_to_rc_record, get_code_by_name,
+)
 from trd_cli.parse_tc import parse_tc
 
 
@@ -81,7 +84,7 @@ class ConversionsTest(TestCase):
             interop = r.get("interoperability")
             if interop is not None:
                 q_title = interop.get("title")
-                q_code = list(filter(lambda q: q["name"] == q_title, QUESTIONNAIRES))[0]["code"]
+                q_code = get_code_by_name(q_title)
                 if q_code is not None and q_code not in done:
                     with self.subTest(q_name=q_code):
                         done.append(q_code)
@@ -89,8 +92,10 @@ class ConversionsTest(TestCase):
                             if q_code == "consent":
                                 continue
                             else:
-                                self.fail(f"Unhandled questionnaire response of type {q_code}.")
-                        result = convert_generic(r)
+                                self.fail(
+                                    f"Unhandled questionnaire response of type {q_code}."
+                                )
+                        result = questionnaire_to_rc_record(r)
                         self.assertEqual(expectations[q_code], result)
 
         for q_code in expectations.keys():

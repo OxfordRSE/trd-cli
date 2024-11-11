@@ -1,8 +1,8 @@
+import json
 from unittest import mock, TestCase, main
 from click.testing import CliRunner
 from click.core import Command
 import os
-import pandas
 import subprocess
 import requests
 
@@ -31,18 +31,45 @@ class CliTest(TestCase):
         self.subprocess_run_mock = self.enterContext(
             mock.patch("subprocess.run", autospec=True)
         )
-        self.pandas_read_csv_mock = self.enterContext(
-            mock.patch("pandas.read_csv", autospec=True)
-        )
         self.redcap_project_mock = self.enterContext(
             mock.patch("trd_cli.main.Project", autospec=True)
+        )
+        self.parse_tc_mock = self.enterContext(
+            mock.patch("trd_cli.main_functions.parse_tc", autospec=True)
+        )
+        self.mock_compare_return = (
+                    {'1255217154': {'info': {'info_birthyear_int': '1949', 'info_datetime': '2024-11-11T15:59:57.221799', 'info_deceased_datetime': '', 'info_gender_int': '1', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '1949-11-04', 'contactemail': 'b.tester@example.com', 'datetime': '2024-11-11T15:59:57.221799', 'firstname': 'Besty', 'id': '1255217154', 'lastname': 'Tester', 'mobilenumber': '+44 7000 000000', 'nhsnumber': '9910362813', 'preferredcontact': '0'}}, '1975714028': {'info': {'info_birthyear_int': '2018', 'info_datetime': '2024-11-11T15:59:57.221846', 'info_deceased_datetime': '', 'info_gender_int': '0', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '2018-08-02', 'contactemail': 'jde-test1@avcosystems.com', 'datetime': '2024-11-11T15:59:57.221846', 'firstname': 'Jamie', 'id': '1975714028', 'lastname': 'Emery', 'mobilenumber': '', 'nhsnumber': '4389162012', 'preferredcontact': '0'}}},
+                    [{'redcap_repeat_instance': 1, 'redcap_repeat_instrument': 'phq9', 'study_id': '__NEW__1255217154', "phq9_response_id": "123423"}]
+                )
+        self.compare_data_mock = self.enterContext(
+            mock.patch(
+                "trd_cli.main.compare_tc_to_rc",
+                autospec=True,
+                return_value=self.mock_compare_return
+            )
         )
         self.requests_post_mock = self.enterContext(
             mock.patch("requests.post", autospec=True)
         )
+        
+        def load_tc_data_side_effect(*_args, **_kwargs):
+            with open("fixtures/tc_data.json", "r") as f:
+                return json.load(f)
+
+        # Mocking the parse_tc function to return the data from fixtures/tc_data.json
+        self.parse_tc_mock.side_effect = load_tc_data_side_effect
+        
+        def export_records_side_effect(*_args, **_kwargs):
+            with open("fixtures/redcap_export.json", "r") as f:
+                return json.load(f)
+
+        # Mocking the export_records method to return the data from fixtures/redcap_export.json
+        self.redcap_project_mock.return_value.export_records.side_effect = (
+            export_records_side_effect
+        )
 
         # Set side effect for import_records method of the redcap Project mock
-        def import_records_side_effect(records, *args, **kwargs):
+        def import_records_side_effect(records, *_args, **_kwargs):
             return {"count": len(records)}
 
         # Mocking the import_records method to return {'count': len(records)}
@@ -73,38 +100,7 @@ class CliTest(TestCase):
         self.assertIn("Downloading data from REDCap - ERROR", result.output)
 
     def test_email_content(self):
-        """Test email content correctness when there are new records, updates, and withdrawn consent."""
         self.subprocess_run_mock.return_value = 0
-        self.pandas_read_csv_mock.return_value = pandas.DataFrame(
-            {
-                "record_id": [1, 2, 3],
-                "consent_withdrawn": ["No", "No", "Yes"],
-                "data_removal_request": ["No", "No", "Yes"],
-                "column1": [1, 2, 3],
-                "column2": [4, 5, 6],
-                "column3": [7, 8, 9],
-            }
-        )
-
-        # Mock REDCap data
-        self.redcap_project_mock.return_value.export_records.return_value = {
-            2: {
-                "record_id": 2,
-                "column1": 1,
-                "column2": 1,
-                "column3": 1,
-                "consent_withdrawn": "No",
-                "data_removal_request": "No",
-            },
-            3: {
-                "record_id": 3,
-                "column1": 3,
-                "column2": 6,
-                "column3": 9,
-                "consent_withdrawn": "No",
-                "data_removal_request": "No",
-            },
-        }
 
         runner = CliRunner()
         result = runner.invoke(cli)
@@ -115,26 +111,14 @@ class CliTest(TestCase):
         self.requests_post_mock.assert_called_once()
 
         email_html = self.requests_post_mock.call_args[1]["data"]["html"]
-        self.assertIn("Added New Records: 1", email_html)
-        self.assertIn("Updated Records: 5", email_html)
-        self.assertIn("Withdrawn Consent: 1 participants", email_html)
-        self.assertIn("Data Deletion Requests: 1", email_html)
-        self.assertIn("Withdrawn Consent IDs: 3", email_html)
-        self.assertIn("Data Deletion Request IDs: 3", email_html)
+        self.assertIn("New Participants: 2", email_html)
+        self.assertIn("New Responses: 1", email_html)
+        self.assertIn("Log File (0 Errors, 0 Warnings)", email_html)
+        self.assertIn(" INFO ", email_html)
 
     def test_email_sending_failure(self):
         """Test email sending failure scenario."""
         self.subprocess_run_mock.return_value = 0
-        self.pandas_read_csv_mock.return_value = pandas.DataFrame(
-            {
-                "record_id": [1],
-                "consent_withdrawn": ["No"],
-                "data_removal_request": ["No"],
-                "column1": [1],
-                "column2": [4],
-                "column3": [7],
-            }
-        )
 
         # Mock REDCap data
         self.redcap_project_mock.return_value.export_records.return_value = {}
