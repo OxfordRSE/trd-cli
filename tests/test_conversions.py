@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+from time import sleep
 from unittest import TestCase, main
 
 from trd_cli.conversions import convert_generic, extract_participant_info, QUESTIONNAIRES
@@ -13,7 +14,7 @@ class ConversionsTest(TestCase):
         expectations = {
             "phq9": {
                 "phq9_response_id": "1589930675",
-                "phq9_datetime": "2024-11-04 12:59:24.9477348+00:00",
+                "phq9_datetime": "2024-11-04T12:59:24.9477348+00:00",
                 "phq9_1_interest_float": "3.0",
                 "phq9_2_depression_float": "3.0",
                 "phq9_3_sleep_float": "3.0",
@@ -35,7 +36,7 @@ class ConversionsTest(TestCase):
                 "gad7_6_irritable_float": "2.0",
                 "gad7_7_afraid_float": "3.0",
                 "gad7_8_difficult_float": "0.0",
-                "gad7_datetime": "2024-11-05 12:05:43.5629631+00:00",
+                "gad7_datetime": "2024-11-05T12:05:43.5629631+00:00",
                 "gad7_score_total_float": "12.0",
             },
             "mania": {
@@ -45,12 +46,12 @@ class ConversionsTest(TestCase):
                 "mania_3_sleep_float": "1.0",
                 "mania_4_talking_float": "1.0",
                 "mania_5_activity_float": "2.0",
-                "mania_datetime": "2024-11-05 12:05:59.3055890+00:00",
+                "mania_datetime": "2024-11-05T12:05:59.3055890+00:00",
                 "mania_score_total_float": "6.0",
             },
             "reqol10": {
                 "reqol10_response_id": "1504524233",
-                "reqol10_datetime": "2024-11-05 12:07:38.7956557+00:00",
+                "reqol10_datetime": "2024-11-05T12:07:38.7956557+00:00",
                 "reqol10_1_everyday_tasks_float": "3.0",
                 "reqol10_2_trust_others_float": "2.0",
                 "reqol10_3_unable_to_cope_float": "1.0",
@@ -66,7 +67,7 @@ class ConversionsTest(TestCase):
             },
             "wsas": {
                 "wsas_response_id": "1212115884",
-                "wsas_datetime": "2024-11-05 12:08:48.0135908+00:00",
+                "wsas_datetime": "2024-11-05T12:08:48.0135908+00:00",
                 "wsas_1_work_float": "3.0",
                 "wsas_2_management_float": "5.0",
                 "wsas_3_social_leisure_float": "3.0",
@@ -84,6 +85,11 @@ class ConversionsTest(TestCase):
                 if q_code is not None and q_code not in done:
                     with self.subTest(q_name=q_code):
                         done.append(q_code)
+                        if q_code not in expectations.keys():
+                            if q_code == "consent":
+                                continue
+                            else:
+                                self.fail(f"Unhandled questionnaire response of type {q_code}.")
                         result = convert_generic(r)
                         self.assertEqual(expectations[q_code], result)
 
@@ -98,6 +104,7 @@ class ConversionsTest(TestCase):
             responses = csv.DictReader(f, delimiter="|")
             response = next(responses)
         private, public = extract_participant_info(response)
+        sleep(0.1)
         self.assertGreater(datetime.now().isoformat(), private["datetime"])
         self.assertGreater(datetime.now().isoformat(), public["info_datetime"])
         private["datetime"] = None

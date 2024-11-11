@@ -229,7 +229,7 @@ def convert_generic(questionnaire_response: dict) -> dict:
     prefix = questionnaire["code"]
     out = {
         f"{prefix}_response_id": str(questionnaire_response["id"]),
-        f"{prefix}_datetime": str(questionnaire_response["submitted"]),
+        f"{prefix}_datetime": str(questionnaire_response["interoperability"]["submitted"]),
     }
     scores = questionnaire_response["scores"]
     for i, k in enumerate(questionnaire["items"]):
