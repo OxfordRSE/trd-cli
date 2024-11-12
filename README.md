@@ -1,5 +1,8 @@
 # Treatment Resistant Depression Database Command Line Interface
 
+[![.github/workflows/test.yml](https://github.com/OxfordRSE/trd-cli/actions/workflows/test.yml/badge.svg)](https://github.com/OxfordRSE/trd-cli/actions/workflows/test.yml)
+[![codecov](https://codecov.io/github/OxfordRSE/trd-cli/graph/badge.svg?token=myj04HCbDQ)](https://codecov.io/github/OxfordRSE/trd-cli)
+
 This CLI performs automated data collection and curation for the TRD Database project.
 
 ## Deployment
