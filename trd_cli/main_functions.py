@@ -116,7 +116,7 @@ def compare_tc_to_rc(tc_data: dict, redcap_id_data: dict) -> Tuple[dict, list]:
             x[0] for x in redcap_id_data[p_id][q_code]
         ]
         if is_new:
-            if p_id not in redcap_id_data:
+            if p_id not in redcap_id_data or len(redcap_id_data[p_id].get(q_code, list())) == 0:
                 instance_number = 1
             else:
                 instance_number = max([x[1] for x in redcap_id_data[p_id][q_code]]) + 1

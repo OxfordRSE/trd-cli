@@ -1,0 +1,947 @@
+{
+    "patient.csv": [
+        {
+            "id": "1975714028",
+            "nhsnumber": "4389162012",
+            "lastresponse": "2024-08-15 16:56:56.468",
+            "birthdate": "2018-08-02",
+            "gender": "0",
+            "contactemail": "jde-test1@avcosystems.com",
+            "mobilenumber": "",
+            "userid": "185482763",
+            "created": "2024-08-15 14:43:12.296",
+            "updated": "2024-08-15 16:56:56.468",
+            "active": "true",
+            "firstname": "Jamie",
+            "lastname": "Emery",
+            "deceasedboolean": "",
+            "deceaseddatetime": "",
+            "integrationid": "",
+            "tenantid": "6",
+            "preferredcontact": "0",
+            "dashboardquestionnaireid": "",
+            "custompatientid": "",
+            "schedulelock": ""
+        },
+        {
+            "id": "909576977",
+            "nhsnumber": "1234567814",
+            "lastresponse": "2024-08-09 11:45:33.142",
+            "birthdate": "2001-08-06",
+            "gender": "1",
+            "contactemail": "demo@example.com",
+            "mobilenumber": "+44 7000 000000",
+            "userid": "1214789337",
+            "created": "2024-08-06 12:02:14.311",
+            "updated": "2024-10-11 11:33:16.269",
+            "active": "true",
+            "firstname": "Demo",
+            "lastname": "McTest",
+            "deceasedboolean": "",
+            "deceaseddatetime": "",
+            "integrationid": "",
+            "tenantid": "6",
+            "preferredcontact": "0",
+            "dashboardquestionnaireid": "",
+            "custompatientid": "",
+            "schedulelock": "2024-11-04 11:47:00.395"
+        },
+        {
+            "id": "1088556167",
+            "nhsnumber": "3990266004",
+            "lastresponse": "",
+            "birthdate": "2018-09-06",
+            "gender": "0",
+            "contactemail": "jde-test50@avcosystems.com",
+            "mobilenumber": "",
+            "userid": "843783021",
+            "created": "2024-09-12 14:12:34.111",
+            "updated": "2024-09-12 14:12:34.111",
+            "active": "true",
+            "firstname": "Jim",
+            "lastname": "TT",
+            "deceasedboolean": "",
+            "deceaseddatetime": "",
+            "integrationid": "",
+            "tenantid": "6",
+            "preferredcontact": "0",
+            "dashboardquestionnaireid": "",
+            "custompatientid": "",
+            "schedulelock": ""
+        },
+        {
+            "id": "2140152908",
+            "nhsnumber": "9038952813",
+            "lastresponse": "",
+            "birthdate": "1990-10-11",
+            "gender": "1",
+            "contactemail": "test@gmail.com",
+            "mobilenumber": "+44 7966 968554",
+            "userid": "1876560713",
+            "created": "2024-10-11 11:26:21.387",
+            "updated": "2024-10-11 11:26:21.387",
+            "active": "true",
+            "firstname": "Testpp",
+            "lastname": "Testpp",
+            "deceasedboolean": "",
+            "deceaseddatetime": "",
+            "integrationid": "",
+            "tenantid": "6",
+            "preferredcontact": "1",
+            "dashboardquestionnaireid": "",
+            "custompatientid": "",
+            "schedulelock": ""
+        }
+    ],
+    "questionnaireresponse.csv": [
+        {
+            "id": "948402899",
+            "questionnaireid": "1783921085",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-08-09 11:45:10.589",
+            "updated": "2024-08-09 11:45:10.589",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "1533375636",
+            "questionnaireid": "1301038331",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-08-09 11:45:10.604",
+            "updated": "2024-08-09 11:45:10.604",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "157901000",
+            "questionnaireid": "753813425",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-08-09 11:45:10.577",
+            "updated": "2024-08-09 11:45:10.577",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "737170898",
+            "questionnaireid": "1524631344",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-08-09 11:45:10.597",
+            "updated": "2024-08-09 11:45:10.597",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "1301807315",
+            "questionnaireid": "753813425",
+            "staffid": "",
+            "patientid": "1975714028",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-08-15 17:03:40.200",
+            "updated": "2024-08-15 17:03:40.200",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "377509100",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "1324580107",
+            "questionnaireid": "1012547082",
+            "staffid": "1659010508",
+            "patientid": "2140152908",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-10-11 11:27:43.455",
+            "updated": "2024-10-11 11:27:43.455",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "2107659061",
+            "questionnaireid": "1012547082",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": null,
+            "scores": null,
+            "submitted": "",
+            "version": "1",
+            "created": "2024-10-11 11:28:28.208",
+            "updated": "2024-10-11 11:28:28.208",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": null,
+            "interoperabilitysubmitted": "",
+            "state": "0",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "435843207",
+            "questionnaireid": "1012547082",
+            "staffid": "1920601906",
+            "patientid": "909576977",
+            "caseloadid": "282",
+            "responses": [
+                {
+                    "Number": 1,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 2,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 3,
+                    "Answer": "2"
+                },
+                {
+                    "Number": 4,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 5,
+                    "Answer": "1"
+                },
+                {
+                    "Number": 6,
+                    "Answer": "2"
+                },
+                {
+                    "Number": 7,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 8,
+                    "Answer": "1"
+                }
+            ],
+            "scores": {
+                "QuestionScores": [
+                    {
+                        "QuestionNumber": 1,
+                        "QuestionShortName": "Anxious",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 2,
+                        "QuestionShortName": "Uncontrollable worrying",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 3,
+                        "QuestionShortName": "Excessive worrying",
+                        "Score": 1.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Several days"
+                    },
+                    {
+                        "QuestionNumber": 4,
+                        "QuestionShortName": "Relaxing",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 5,
+                        "QuestionShortName": "Restless",
+                        "Score": 0.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Not at all"
+                    },
+                    {
+                        "QuestionNumber": 6,
+                        "QuestionShortName": "Irritable",
+                        "Score": 1.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Several days"
+                    },
+                    {
+                        "QuestionNumber": 7,
+                        "QuestionShortName": "Afraid",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 8,
+                        "QuestionShortName": "Difficult",
+                        "Score": 0.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Not difficult at all"
+                    }
+                ],
+                "CategoryScores": [
+                    {
+                        "Name": "Total",
+                        "Score": 11.0,
+                        "MaxScore": 21.0,
+                        "Tscore": null,
+                        "HideGraph": false,
+                        "ScoreStatus": 0,
+                        "IsTotal": true,
+                        "Snomed": "445455005",
+                        "InvalidatesTotal": false,
+                        "NumberSkipped": 0,
+                        "SkippedWarningThreshold": null,
+                        "DisplayValue": "11"
+                    }
+                ]
+            },
+            "submitted": "2024-08-09 11:45:33.126",
+            "version": "1",
+            "created": "2024-08-09 11:45:10.563",
+            "updated": "2024-08-09 11:45:33.133",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "",
+            "interoperability": {
+                "version": 1,
+                "scores": {
+                    "QuestionScores": [
+                        {
+                            "QuestionNumber": 1,
+                            "QuestionShortName": "Anxious",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 2,
+                            "QuestionShortName": "Uncontrollable worrying",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 3,
+                            "QuestionShortName": "Excessive worrying",
+                            "Score": 1.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Several days"
+                        },
+                        {
+                            "QuestionNumber": 4,
+                            "QuestionShortName": "Relaxing",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 5,
+                            "QuestionShortName": "Restless",
+                            "Score": 0.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Not at all"
+                        },
+                        {
+                            "QuestionNumber": 6,
+                            "QuestionShortName": "Irritable",
+                            "Score": 1.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Several days"
+                        },
+                        {
+                            "QuestionNumber": 7,
+                            "QuestionShortName": "Afraid",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 8,
+                            "QuestionShortName": "Difficult",
+                            "Score": 0.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Not difficult at all"
+                        }
+                    ],
+                    "CategoryScores": [
+                        {
+                            "Name": "Total",
+                            "Score": 11.0,
+                            "MaxScore": 21.0,
+                            "Tscore": null,
+                            "ScoreStatus": 0,
+                            "IsTotal": true,
+                            "DisplayValue": "11"
+                        }
+                    ]
+                },
+                "submitted": "2024-08-09T11:45:33.1265670+01:00",
+                "questionnaireid": 1012547082,
+                "id": 435843207,
+                "tenant": "TRD",
+                "patientid": null,
+                "title": "Anxiety (GAD-7)",
+                "type": "Questionnaire",
+                "active": true
+            },
+            "interoperabilitysubmitted": "",
+            "state": "2",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "724710898",
+            "questionnaireid": "753813425",
+            "staffid": "",
+            "patientid": "1975714028",
+            "caseloadid": "282",
+            "responses": [
+                {
+                    "Number": 1,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 2,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 3,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 4,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 5,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 6,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 7,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 8,
+                    "Answer": "2"
+                },
+                {
+                    "Number": 9,
+                    "Answer": "4"
+                }
+            ],
+            "scores": {
+                "QuestionScores": [
+                    {
+                        "QuestionNumber": 1,
+                        "QuestionShortName": "Interest",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 2,
+                        "QuestionShortName": "Depression",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 3,
+                        "QuestionShortName": "Sleep",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 4,
+                        "QuestionShortName": "Lack of energy",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 5,
+                        "QuestionShortName": "Appetite",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 6,
+                        "QuestionShortName": "View of self",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 7,
+                        "QuestionShortName": "Concentration",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 8,
+                        "QuestionShortName": "Movements",
+                        "Score": 1.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Several days"
+                    },
+                    {
+                        "QuestionNumber": 9,
+                        "QuestionShortName": "Self-harm",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    }
+                ],
+                "CategoryScores": [
+                    {
+                        "Name": "Total",
+                        "Score": 20.0,
+                        "MaxScore": 27.0,
+                        "Tscore": null,
+                        "HideGraph": false,
+                        "ScoreStatus": 0,
+                        "IsTotal": true,
+                        "Snomed": "720433000",
+                        "InvalidatesTotal": false,
+                        "NumberSkipped": 0,
+                        "SkippedWarningThreshold": null,
+                        "DisplayValue": "20"
+                    }
+                ]
+            },
+            "submitted": "2024-08-15 16:51:10.914",
+            "version": "1",
+            "created": "2024-08-15 16:51:03.930",
+            "updated": "2024-08-15 16:51:10.922",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "377509100",
+            "interoperability": {
+                "version": 1,
+                "scores": {
+                    "QuestionScores": [
+                        {
+                            "QuestionNumber": 1,
+                            "QuestionShortName": "Interest",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 2,
+                            "QuestionShortName": "Depression",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 3,
+                            "QuestionShortName": "Sleep",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 4,
+                            "QuestionShortName": "Lack of energy",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 5,
+                            "QuestionShortName": "Appetite",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 6,
+                            "QuestionShortName": "View of self",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 7,
+                            "QuestionShortName": "Concentration",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 8,
+                            "QuestionShortName": "Movements",
+                            "Score": 1.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Several days"
+                        },
+                        {
+                            "QuestionNumber": 9,
+                            "QuestionShortName": "Self-harm",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        }
+                    ],
+                    "CategoryScores": [
+                        {
+                            "Name": "Total",
+                            "Score": 20.0,
+                            "MaxScore": 27.0,
+                            "Tscore": null,
+                            "ScoreStatus": 0,
+                            "IsTotal": true,
+                            "DisplayValue": "20"
+                        }
+                    ]
+                },
+                "submitted": "2024-08-15T16:51:10.9141628+01:00",
+                "questionnaireid": 753813425,
+                "id": 724710898,
+                "tenant": "TRD",
+                "patientid": null,
+                "title": "Depression (PHQ-9)",
+                "type": "Questionnaire",
+                "active": true
+            },
+            "interoperabilitysubmitted": "",
+            "state": "2",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        },
+        {
+            "id": "1510227625",
+            "questionnaireid": "753813425",
+            "staffid": "",
+            "patientid": "1975714028",
+            "caseloadid": "282",
+            "responses": [
+                {
+                    "Number": 1,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 2,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 3,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 4,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 5,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 6,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 8,
+                    "Answer": "3"
+                },
+                {
+                    "Number": 9,
+                    "Answer": "4"
+                },
+                {
+                    "Number": 7,
+                    "Answer": "3"
+                }
+            ],
+            "scores": {
+                "QuestionScores": [
+                    {
+                        "QuestionNumber": 1,
+                        "QuestionShortName": "Interest",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 2,
+                        "QuestionShortName": "Depression",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 3,
+                        "QuestionShortName": "Sleep",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 4,
+                        "QuestionShortName": "Lack of energy",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 5,
+                        "QuestionShortName": "Appetite",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 6,
+                        "QuestionShortName": "View of self",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    },
+                    {
+                        "QuestionNumber": 7,
+                        "QuestionShortName": "Concentration",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 8,
+                        "QuestionShortName": "Movements",
+                        "Score": 2.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "More than half the days"
+                    },
+                    {
+                        "QuestionNumber": 9,
+                        "QuestionShortName": "Self-harm",
+                        "Score": 3.0,
+                        "MaxScore": 3.0,
+                        "Snomed": null,
+                        "DisplayValue": "Nearly every day"
+                    }
+                ],
+                "CategoryScores": [
+                    {
+                        "Name": "Total",
+                        "Score": 22.0,
+                        "MaxScore": 27.0,
+                        "Tscore": null,
+                        "HideGraph": false,
+                        "ScoreStatus": 0,
+                        "IsTotal": true,
+                        "Snomed": "720433000",
+                        "InvalidatesTotal": false,
+                        "NumberSkipped": 0,
+                        "SkippedWarningThreshold": null,
+                        "DisplayValue": "22"
+                    }
+                ]
+            },
+            "submitted": "2024-08-15 16:56:56.458",
+            "version": "1",
+            "created": "2024-08-15 16:56:48.797",
+            "updated": "2024-08-15 16:56:56.466",
+            "active": "true",
+            "tenantid": "6",
+            "scheduleid": "377509100",
+            "interoperability": {
+                "version": 1,
+                "scores": {
+                    "QuestionScores": [
+                        {
+                            "QuestionNumber": 1,
+                            "QuestionShortName": "Interest",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 2,
+                            "QuestionShortName": "Depression",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 3,
+                            "QuestionShortName": "Sleep",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 4,
+                            "QuestionShortName": "Lack of energy",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 5,
+                            "QuestionShortName": "Appetite",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 6,
+                            "QuestionShortName": "View of self",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        },
+                        {
+                            "QuestionNumber": 7,
+                            "QuestionShortName": "Concentration",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 8,
+                            "QuestionShortName": "Movements",
+                            "Score": 2.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "More than half the days"
+                        },
+                        {
+                            "QuestionNumber": 9,
+                            "QuestionShortName": "Self-harm",
+                            "Score": 3.0,
+                            "MaxScore": 3.0,
+                            "DisplayValue": "Nearly every day"
+                        }
+                    ],
+                    "CategoryScores": [
+                        {
+                            "Name": "Total",
+                            "Score": 22.0,
+                            "MaxScore": 27.0,
+                            "Tscore": null,
+                            "ScoreStatus": 0,
+                            "IsTotal": true,
+                            "DisplayValue": "22"
+                        }
+                    ]
+                },
+                "submitted": "2024-08-15T16:56:56.4584761+01:00",
+                "questionnaireid": 753813425,
+                "id": 1510227625,
+                "tenant": "TRD",
+                "patientid": null,
+                "title": "Depression (PHQ-9)",
+                "type": "Questionnaire",
+                "active": true
+            },
+            "interoperabilitysubmitted": "",
+            "state": "2",
+            "loadsection": "",
+            "senttoexternalreport": "false",
+            "editedstaffid": ""
+        }
+    ]
+}

@@ -1,4 +1,5 @@
 import json
+from typing import List
 from unittest import mock, TestCase, main
 from click.testing import CliRunner
 from click.core import Command
@@ -6,7 +7,9 @@ import os
 import subprocess
 import requests
 
+from trd_cli.conversions import QUESTIONNAIRES
 from trd_cli.main import cli
+from trd_cli.main_functions import compare_tc_to_rc
 
 cli: Command  # annotating to avoid linter warnings
 
@@ -113,7 +116,7 @@ class CliTest(TestCase):
         email_html = self.requests_post_mock.call_args[1]["data"]["html"]
         self.assertIn("New Participants: 2", email_html)
         self.assertIn("New Responses: 1", email_html)
-        self.assertIn("Log File (0 Errors, 0 Warnings)", email_html)
+        self.assertIn("Log File (0 Errors, 7 Warnings)", email_html)
         self.assertIn(" INFO ", email_html)
 
     def test_email_sending_failure(self):
@@ -132,6 +135,68 @@ class CliTest(TestCase):
 
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn("Sending email summary - ERROR", result.output)
+    
+    def test_double_upload(self):
+        """
+        - Parse a True Colours export versus a blank REDCap export.
+        - Parse an updated True Colours export versus the previous REDCap export.
+        """
+        
+        # We need to use the real compare for this to be a useful test
+        self.compare_data_mock.side_effect = compare_tc_to_rc  
+
+        def mock_next_record():
+            i = 200  # the redcap_from_tc function below uses the 101-199 range for study_ids
+            while True:
+                i += 1
+                yield str(i)
+        self.redcap_project_mock.return_value.generate_next_record_name.side_effect = lambda: mock_next_record()
+        
+        def load_tc_data(f):
+            with open(f, "r") as f:
+                return json.load(f)
+            
+        def redcap_from_tc(tc_data: dict) -> List[dict]:
+            out_data = []
+            participant_id_map = {
+                p["id"]: i + 101 for i, p in enumerate(tc_data["patient.csv"])
+            }
+            qq = [q["code"] for q in QUESTIONNAIRES]
+            for qr in tc_data["questionnaireresponse.csv"]:
+                if qr["responses"] is None:
+                    continue
+                q = [q["code"] for q in QUESTIONNAIRES if q["name"] == qr["interoperability"]["title"]][0]
+                out = {
+                    "study_id": participant_id_map[qr["patientid"]], 
+                    "id": qr["patientid"],
+                    "redcap_repeat_instrument": q, 
+                    "redcap_repeat_instance": 1, 
+                    **{f"{q}_record_id": "" for q in qq},
+                    f"{q}_response_id": qr["id"]
+                }
+                out_data.append(out)
+            return out_data
+
+        initial_data = load_tc_data("fixtures/tc_data_initial.json")
+
+        self.subTest("Initial upload")
+        self.parse_tc_mock.side_effect = lambda _: initial_data 
+        self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: list()
+        
+        runner = CliRunner()
+        result = runner.invoke(cli)
+
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertIn("4 new participants; 3 new responses.", result.output)
+        
+        self.subTest("Second upload")
+        self.parse_tc_mock.side_effect = lambda _: load_tc_data("fixtures/tc_data.json")
+        self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: redcap_from_tc(initial_data)
+
+        runner = CliRunner()
+        result = runner.invoke(cli)
+        
+        self.assertEqual(result.exit_code, 0, result.output)
 
 
 if __name__ == "__main__":

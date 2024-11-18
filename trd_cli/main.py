@@ -77,7 +77,9 @@ def cli():
         # Compare the True Colours data to the REDCap data
         click.echo("Comparing True Colours data to REDCap data", nl=False)
 
-        new_participants, new_responses = compare_tc_to_rc(redcap_data, tc_data)
+        new_participants, new_responses = compare_tc_to_rc(
+            tc_data=tc_data, redcap_id_data=redcap_data
+        )
         new_participants_success_count = 0
 
         id_map = {}
@@ -99,15 +101,9 @@ def cli():
                     LOGGER.exception(e)
 
         if len(new_responses) > 0:
-            LOGGER.info(
-                (
-                    f"Added {len(new_responses)} new questionnaire responses: "
-                    f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
-                )
-            )
             patched_responses = []
             for r in new_responses:
-                if r["study_id"].startswith("__NEW__"):
+                if isinstance(r["study_id"], str) and r["study_id"].startswith("__NEW__"):
                     p_id = r["study_id"][7:]
                     if p_id not in id_map:
                         LOGGER.error(f"{p_id} not in id_map for response {json.dumps(r)}")
@@ -120,6 +116,13 @@ def cli():
                     (
                         f"Failed to import all new questionnaire responses. "
                         f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
+                    )
+                )
+            else:
+                LOGGER.info(
+                    (
+                        f"Added {len(new_responses)} new questionnaire responses: "
+                        f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
                     )
                 )
 

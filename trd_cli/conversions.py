@@ -122,15 +122,15 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "name": "Depression (PHQ-9)",
         "code": "phq9",
         "items": [
-            "Interest",
-            "Depression",
-            "Sleep",
-            "Lack of energy",
-            "Appetite",
-            "View of self",
-            "Concentration",
-            "Movements",
-            "Self-harm",
+            "interest",
+            "depression",
+            "sleep",
+            "lack_of_energy",
+            "appetite",
+            "view_of_self",
+            "concentration",
+            "movements",
+            "self_harm",
         ],
         "scores": ["Total"],
     },
@@ -138,14 +138,14 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "name": "Anxiety (GAD-7)",
         "code": "gad7",
         "items": [
-            "Anxious",
-            "Uncontrollable worrying",
-            "Excessive worrying",
-            "Relaxing",
-            "Restless",
-            "Irritable",
-            "Afraid",
-            "Difficult",
+            "anxious",
+            "uncontrollable_worrying",
+            "excessive_worrying",
+            "relaxing",
+            "restless",
+            "irritable",
+            "afraid",
+            "difficult",
         ],
         "scores": ["Total"],
     },
@@ -153,11 +153,11 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "name": "Mania (Altman)",
         "code": "mania",
         "items": [
-            "+Happiness",
-            "+Confidence",
-            "-Sleep",
-            "+Talking",
-            "+Activity",
+            "happiness",
+            "confidence",
+            "sleep",
+            "talking",
+            "activity",
         ],
         "scores": ["Total"],
     },
@@ -165,17 +165,17 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "name": "ReQoL 10",
         "code": "reqol10",
         "items": [
-            "everyday tasks",
-            "trust others",
-            "unable to cope",
-            "do wanted things",
-            "felt happy",
-            "not worth living",
+            "everyday_tasks",
+            "trust_others",
+            "unable_to_cope",
+            "do_wanted_things",
+            "felt_happy",
+            "not_worth_living",
             "enjoyed",
-            "felt hopeful",
-            "felt lonely",
-            "confident in self",
-            "pysical health",  # sic
+            "felt_hopeful",
+            "felt_lonely",
+            "confident_in_self",
+            "pysical_health",  # sic
         ],
         "scores": ["Total"],
     },
@@ -183,11 +183,11 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "name": "Work and Social Adjustment Scale",
         "code": "wsas",
         "items": [
-            "Work",
-            "Management",
-            "Social leisure",
-            "Private leisure",
-            "Family",
+            "work",
+            "management",
+            "social_leisure",
+            "private_leisure",
+            "family",
         ],
         "scores": ["Total"],
     },
@@ -199,7 +199,9 @@ def get_code_by_name(name: str) -> str:
 
 
 def convert_consent(data: dict) -> dict:
+    question_scores = data["scores"]["QuestionScores"]
     out = {
+        "consent_response_id": str(data["id"]),
         "consent_datetime": data["submitted"],
     }
     for q in [
@@ -207,11 +209,11 @@ def convert_consent(data: dict) -> dict:
         18,
     ]:  # Question 18 is not reported because it's a signature
         question = next(
-            (x for x in data["scores"] if x["QuestionNumber"] == q + 1), None
+            (x for x in question_scores if x["QuestionNumber"] == q + 1), None
         )
         out[f"consent_{q + 1}_str"] = question["DisplayValue"]
 
-    return {}
+    return out
 
 
 def convert_demo(data: dict) -> dict:
@@ -240,15 +242,12 @@ def convert_generic(questionnaire_response: dict) -> dict:
     scores = questionnaire_response["scores"]
     for i, k in enumerate(questionnaire["items"]):
         item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionShortName"] == k), None
+            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
         )
         if not item:
             LOGGER.warning(f"{prefix}: No {k} in scores")
             continue
-        if k.startswith("-"):
-            out[f"{prefix}_{i + 1}_{convert_key(k[1:])}_float"] = str(item["Score"])
-        else:
-            out[f"{prefix}_{i + 1}_{convert_key(k)}_float"] = str(item["Score"])
+        out[f"{prefix}_{i + 1}_{k}_float"] = str(item["Score"])
 
     # Append scores
     category_scores = scores["CategoryScores"]
