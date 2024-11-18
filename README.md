@@ -29,6 +29,34 @@ mailgun_secret       = "your_mailgun_secret_value"
 
 The project converts True Colours data to REDCap data.
 REDCap doesn't allow direct database access, however, so we need to create fake instruments in REDCap to store the data.
+
+
+### The quick way
+
+The quick way to set up the REDCap project is still quite slow, but it's faster than the long way.
+
+1. Make sure you have all the questionnaires you need in your test dataset (`tests/fixtures/*.csv`).
+2. Run `tests/fixtures/tc_to_fixture.py`.
+3. Open the `tests/fixtures/rc_variables.txt` file created by the script.
+
+```text
+###### instrument_name ######
+field_1_name
+field_2_name
+field_3_name
+...
+```
+
+Each instrument looks like the above. 
+Each will have to be created individually. 
+You should use `instrument_name` as the name of the instrument in REDCap, although this is not strictly necessary.
+The field names must be copied exactly as they appear in the file.
+This means that most will be prefixed with their instrument name (except for private fields).
+
+When the data are exported from REDCap, the field names will help identify which instrument they belong to.
+
+### The long way
+
 Create a `private` instrument in REDCap with Text Box fields with these Variable Names:
 
 | Field Name         | True Colours `patient.csv` field | Contains personal information? |
@@ -45,16 +73,16 @@ Create a `private` instrument in REDCap with Text Box fields with these Variable
 This allows us to query REDCap for the `id` and link it to the internal `study_id`.
 This in turn allows us to identify whether a participant is already in the database.
 
-### Other questionnaires
+#### Other questionnaires
 
-#### We save **scores** only
+##### We save **scores** only
 
 The data in REDCap are the **scores** for items on questionnaires. 
 This means that reverse-coded items, etc. are already accounted for.
 
 To recover the actual answers that a participant entered, refer to the data dictionary for the scale of interest.
 
-#### Instrument structure
+##### Instrument structure
 
 The instruments only exist as a framework for holding data exported from True Colours. 
 This means that we need to provide a very specific structure:
@@ -67,8 +95,7 @@ This means that we need to provide a very specific structure:
 - Include `_score_` fields for any scores or subscale scores that are calculated in True Colours
   - E.g. `phq9_score_total_float`
 
-
-#### Using the REDCap data
+### Using the REDCap data
 
 REDCap records are always exported in `string` format. 
 This means that the data may have to be parsed to be useful.
