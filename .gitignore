@@ -14,3 +14,5 @@ __pycache__/
 .terraform/
 secrets.tfvars
 **/trd_cli.log
+
+tests/fixtures/rc_variables.txt
