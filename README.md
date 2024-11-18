@@ -39,6 +39,8 @@ The quick way to set up the REDCap project is still quite slow, but it's faster 
 2. Run `tests/fixtures/tc_to_fixture.py`.
 3. Open the `tests/fixtures/rc_variables.txt` file created by the script.
 
+The `rc_variables.txt` file will look like this:
+
 ```text
 ###### instrument_name ######
 field_1_name
@@ -47,11 +49,18 @@ field_3_name
 ...
 ```
 
-Each instrument looks like the above. 
-Each will have to be created individually. 
+4. For each line with `######` at the start and end, create an instrument with the fields listed below it.
+
 You should use `instrument_name` as the name of the instrument in REDCap, although this is not strictly necessary.
 The field names must be copied exactly as they appear in the file.
 This means that most will be prefixed with their instrument name (except for private fields).
+
+Each field will have to be created in REDCap with the following settings:
+- Field Type: Text Box (Short Text, Number, Date/Time...)
+- Field Label: The name of the field in the file (not strictly necessary, but it helps)
+- Variable Name: The name of the field in the file (**exactly as it appears in the file**)
+- Identifier: No (unless it's an `id` field e.g. `instrument_name_response_id`)
+- _No required, validation, etc_ (we're importing from True Colours, so we don't want stuff to break because of REDCap's validation)
 
 When the data are exported from REDCap, the field names will help identify which instrument they belong to.
 
@@ -70,19 +79,11 @@ Create a `private` instrument in REDCap with Text Box fields with these Variable
 | `lastname`         | `lastname`                       | `True`                         |
 | `preferredcontact` | `preferredcontact`               | `False`                        |
 
+The `id` _must_ be listed with 'Identifier' set to 'No'.
 This allows us to query REDCap for the `id` and link it to the internal `study_id`.
 This in turn allows us to identify whether a participant is already in the database.
 
-#### Other questionnaires
-
-##### We save **scores** only
-
-The data in REDCap are the **scores** for items on questionnaires. 
-This means that reverse-coded items, etc. are already accounted for.
-
-To recover the actual answers that a participant entered, refer to the data dictionary for the scale of interest.
-
-##### Instrument structure
+#### Instruments for other questionnaires
 
 The instruments only exist as a framework for holding data exported from True Colours. 
 This means that we need to provide a very specific structure:
@@ -95,7 +96,16 @@ This means that we need to provide a very specific structure:
 - Include `_score_` fields for any scores or subscale scores that are calculated in True Colours
   - E.g. `phq9_score_total_float`
 
-### Using the REDCap data
+## Using the REDCap data
+
+### We save **scores** only
+
+The data in REDCap are the **scores** for items on questionnaires. 
+This means that reverse-coded items, etc. are already accounted for.
+
+To recover the actual answers that a participant entered, refer to the data dictionary for the scale of interest.
+
+### Handling exported data
 
 REDCap records are always exported in `string` format. 
 This means that the data may have to be parsed to be useful.
