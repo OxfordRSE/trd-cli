@@ -137,6 +137,52 @@ This does make sense.
 **Note** that the `redcap_repeat_instance` field is actually an **integer** whereas everything else is a string.
 There doesn't seem to be a way in REDCap to get it to store data values as anything but strings.
 
+## Implementation (`QUESTIONNAIRES`)
+
+The core work of the tool is performed by the `QUESTIONNAIRES` list in `conversions.py`.
+This contains a dict for each questionnaire we expect to find in the True Colours data.
+Below, you will find a description of each property and how it relates to True Colours questionnaire setup.
+
+### `name`
+
+Corresponds to the **Title** field in the True Colours Questionnaire Builder. 
+It is _not the Name field_.
+
+## `code`
+
+This is the short questionnaire identifier used for REDCap. 
+It does not relate to anything in True Colours. 
+It should be short and clear.
+
+Exported REDCap data will have fields named like `<code>_<#>_<item>_<data_type>` (e.g. `phq9_1_interest_float`), 
+so expect whatever you put here to be visible to researchers in their datasets.
+
+### `items`
+
+The `items` is a list of the questions in the questionnaire. 
+The **order of the items** is the order they are listed in the True Colours Questionnaire Builder. 
+So the first item corresponds to Question 1, the second to Question 2, and so on.
+The value is a string that will be used to add some context to the variable name for researchers.
+
+Exported REDCap data will have fields named like `<code>_<#>_<item>_<data_type>` (e.g. `phq9_1_interest_float`), 
+so picking a good name will help researchers interpret their datasets without constant reference to the data dictionary.
+Names should be as short as possible.
+
+### `scores`
+
+These correspond to the **Category Name** fields of the **Questionnaire Scoring** in the 
+True Colours Questionnaire Builder.
+They must match exactly.
+
+The score will be converted into lower case with spaces and other characters replaced with `-` or removed.
+
+Exported REDCap data will have fields named like `<code>_score_<score>_<data_type>` (e.g. `phq9_score_total_float`).
+
+### `conversion_fn`
+
+This is the function used for converting the questionnaire from True Colours data into REDCap data.
+There are several conversion functions listed in `conversions.py`.
+For most questionnaires the one to use will be `convert_scores`, which extracts the scores for each question.
 
 ## Pre-commit
 
