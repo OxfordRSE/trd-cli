@@ -19,85 +19,6 @@ class RCRecordMetadata(TypedDict):
     redcap_repeat_instance: int
 
 
-class RCRecordRow(RCRecordMetadata):
-    # Private information. Types not included because users will not see this.
-    id: str  # patient.id NOT patient.userid
-    nhsnumber: str
-    birthdate: str
-    contactemail: str
-    mobilenumber: str
-    firstname: str
-    lastname: str
-    preferredcontact: str
-    # active: bool
-    created: str
-    updated: str
-    # Consent
-    # Demo (Demographics)
-    demo_birthyear_int: str
-    demo_gender_int: str
-    demo_is_deceased_bool: str
-    demo_deceased_datetime: str
-    # PHQ9 (Depression)
-    phq9_response_id: str
-    phq9_datetime: str
-    phq9_1_interest_float: str
-    phq9_2_depression_float: str
-    phq9_3_sleep_float: str
-    phq9_4_lack_of_energy_float: str
-    phq9_5_appetite_float: str
-    phq9_6_view_of_self_float: str
-    phq9_7_concentration_float: str
-    phq9_8_movements_float: str
-    phq9_9_self_harm_float: str
-    phq9_score_total_float: str
-    # GAD7 (Anxiety)
-    gad7_response_id: str
-    gad7_datetime: str
-    gad7_1_anxious_float: str
-    gad7_2_uncontrollable_worrying_float: str
-    gad7_3_excessive_worrying_float: str
-    gad7_4_relaxing_float: str
-    gad7_5_restless_float: str
-    gad7_6_irritable_float: str
-    gad7_7_afraid_float: str
-    gad7_8_difficult_float: str
-    gad7_score_total_float: str
-    # Mania (Altman)
-    mania_response_id: str
-    mania_datetime: str
-    mania_1_happiness_float: str
-    mania_2_confidence_float: str
-    mania_3_sleep_float: str
-    mania_4_talking_float: str
-    mania_5_activity_float: str
-    mania_score_total_float: str
-    # ReQoL 10
-    reqol10_response_id: str
-    reqol10_datetime: str
-    reqol10_1_everyday_tasks_float: str
-    reqol10_2_trust_others_float: str
-    reqol10_3_unable_to_cope_float: str
-    reqol10_4_do_wanted_things_float: str
-    reqol10_5_felt_happy_float: str
-    reqol10_6_not_worth_living_float: str
-    reqol10_7_enjoyed_float: str
-    reqol10_8_felt_hopeful_float: str
-    reqol10_9_felt_lonely_float: str
-    reqol10_10_confident_in_self_float: str
-    reqol10_11_pysical_health_float: str
-    reqol10_score_total_float: str
-    # Work and Social Adjustment Scale (WSAS)
-    wsas_response_id: str
-    wsas_datetime: str
-    wsas_1_work_float: str
-    wsas_2_management_float: str
-    wsas_3_social_leisure_float: str
-    wsas_4_private_leisure_float: str
-    wsas_5_family_float: str
-    wsas_score_total_float: str
-
-
 class QuestionnaireMetadata(TypedDict):
     name: str
     code: str
@@ -107,15 +28,135 @@ class QuestionnaireMetadata(TypedDict):
 
 QUESTIONNAIRES: List[QuestionnaireMetadata] = [
     {
-        "name": "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form",
-        "code": "consent",
-        "items": [],
+        "name": "Anxiety (GAD-7)",
+        "code": "gad7",
+        "items": [
+            "anxious",
+            "uncontrollable_worrying",
+            "excessive_worrying",
+            "relaxing",
+            "restless",
+            "irritable",
+            "afraid",
+            "difficult",
+        ],
+        "scores": ["Total"],
+    },
+    {
+        "name": "AQ-10 Autistm Spectrum Quotient (AQ)",
+        "code": "aq10",
+        "items": [
+            "sounds",
+            "holism",
+            "multitasking",
+            "task_switching",
+            "social_inference",
+            "detect_boredom",
+            "intentions_story",
+            "collections",
+            "facial_emotions",
+            "intentions_real"
+        ],
+        "scores": [
+            "Scoring 1"
+        ],
+    },
+    {
+        "name": "Adult ADHD Self-Report Scale (ASRS-v1.1) Symptom Checklist Instructions",
+        "code": "asrs",
+        "items": [
+            "completing",
+            "preparing",
+            "remembering",
+            "procrastination",
+            "fidgeting",
+            "overactivity",
+            "carelessness",
+            "attention",
+            "concentration",
+            "misplacing",
+            "distracted",
+            "standing",
+            "restlessness",
+            "not_relaxing",
+            "loquacity",
+            "finishing_sentences",
+            "queueing",
+            "interrupting",
+        ],
         "scores": [],
+    },
+    {
+        "name": "Alcohol use disorders identification test (AUDIT)",
+        "code": "audit",
+        "items": [
+            "frequency",
+            "units",
+            "binge_frequency",
+            "cant_stop",
+            "incapacitated",
+            "morning_drink",
+            "guilt",
+            "memory_loss",
+            "injuries",
+            "concern",
+        ],
+        "scores": [
+            "Low Risk",
+            "Increased Risk",
+            "Higher Risk",
+            "Possible Dependence",
+        ],
+    },
+    {
+        "name": "Brooding subscale of Ruminative Response Scale",
+        "code": "brss",
+        "items": [
+            "deserve",
+            "react",
+            "regret",
+            "why_me",
+            "handle"
+        ],
+        "scores": [
+            "Scoring 1"
+        ]
     },
     {
         "name": "Demographics",
         "code": "demo",
-        "items": [],
+        "items": [
+            "disabled",
+            "long_term_condition",
+            "national_identity",
+            "national_identity_other",
+            "ethnicity",
+            "ethnicity_asian_detail",
+            "ethnicity_asian_other",
+            "ethnicity_black_detail",
+            "ethnicity_black_other",
+            "ethnicity_mixed_detail",
+            "ethnicity_mixed_other",
+            "ethnicity_white_detail",
+            "ethnicity_white_other",
+            "ethnicity_other_detail",
+            "ethnicity_other_other",
+            "religion",
+            "religion_other",
+            "sex",
+            "gender",
+            "gender_other",
+            "trans",
+            "sexuality",
+            "sexuality_other",
+            "relationship",
+            "relationship_other",
+            "caring",
+            "employment",
+            "employment_other",
+            "education",
+            "education_other",
+        ],
         "scores": [],
     },
     {
@@ -135,19 +176,24 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "scores": ["Total"],
     },
     {
-        "name": "Anxiety (GAD-7)",
-        "code": "gad7",
+        "name": "Drug use disorders identification test (DUDIT)",
+        "code": "dudit",
         "items": [
-            "anxious",
-            "uncontrollable_worrying",
-            "excessive_worrying",
-            "relaxing",
-            "restless",
-            "irritable",
-            "afraid",
-            "difficult",
+            "frequency",
+            "multiple",
+            "frequency_day",
+            "influence",
+            "longing",
+            "cant_stop",
+            "incapacitated",
+            "morning_drug",
+            "guilt",
+            "injury",
+            "concern"
         ],
-        "scores": ["Total"],
+        "scores": [
+            "Scoring"
+        ],
     },
     {
         "name": "Mania (Altman)",
@@ -160,6 +206,54 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "activity",
         ],
         "scores": ["Total"],
+    },
+    {
+        "name": "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form",
+        "code": "consent",
+        "items": [],
+        "scores": [],
+    },
+    {
+        "name": "Positive Valence Systems Scale, 21 items (PVSS-21)",
+        "code": "pvss",
+        "items": [
+            "savour",
+            "activities",
+            "fresh_air",
+            "social_time",
+            "weekend",
+            "touch",
+            "outdoors",
+            "feedback",
+            "meals",
+            "praise",
+            "social_time",
+            "goals",
+            "hug",
+            "fun",
+            "hard_work",
+            "meal",
+            "achievements",
+            "hug_afterglow",
+            "mastery",
+            "activities",
+            "beauty",
+        ],
+        "scores": [
+            "Food",
+            "Physical Touch",
+            "Outdoors",
+            "Positive Feedback",
+            "Hobbies",
+            "Social Interactions",
+            "Goals",
+            "Reward Valuation",
+            "Reward Expectancy",
+            "Effort Valuation",
+            "Reward Aniticipation",
+            "Initial Responsiveness",
+            "Reward Satiation"
+        ],
     },
     {
         "name": "ReQoL 10",
@@ -178,6 +272,23 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "pysical_health",  # sic
         ],
         "scores": ["Total"],
+    },
+    {
+        "name": "Standardised Assessment of Personality - Abbreviated Scale (Moran)",
+        "code": "sapas",
+        "items": [
+            "friends",
+            "loner",
+            "trust",
+            "temper",
+            "impulsive",
+            "worry",
+            "dependent",
+            "perfectionist",
+        ],
+        "scores": [
+            "Scoring 1"
+        ],
     },
     {
         "name": "Work and Social Adjustment Scale",
@@ -216,16 +327,40 @@ def convert_consent(data: dict) -> dict:
     return out
 
 
-def convert_demo(data: dict) -> dict:
-    return {
-        "demo_birthyear_int": str(),
-        "demo_gender_int": str(),
-        "demo_is_deceased_bool": str(),
-        "demo_deceased_datetime": str(),
+def convert_display_values(questionnaire_response: dict) -> dict:
+    """
+    Convert a questionnaire where we take the text of the answers rather than the scores.
+    """
+    questionnaire = list(
+        filter(
+            lambda q: q["name"] == questionnaire_response["interoperability"]["title"],
+            QUESTIONNAIRES,
+        )
+    )[0]
+    prefix = questionnaire["code"]
+    out = {
+        f"{prefix}_response_id": str(questionnaire_response["id"]),
+        f"{prefix}_datetime": str(
+            questionnaire_response["interoperability"]["submitted"]
+        ),
     }
+    scores = questionnaire_response["scores"]
+    for i, k in enumerate(questionnaire["items"]):
+        item = next(
+            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
+        )
+        if not item:
+            LOGGER.warning(f"{prefix}: No {k} in scores")
+            continue
+        out[f"{prefix}_{i + 1}_{k}_str"] = str(item["DisplayValue"])
+
+    return out
 
 
-def convert_generic(questionnaire_response: dict) -> dict:
+def convert_scores(questionnaire_response: dict) -> dict:
+    """
+    Convert a questionnaire where we take the scores of the answers.
+    """
     questionnaire = list(
         filter(
             lambda q: q["name"] == questionnaire_response["interoperability"]["title"],
@@ -275,8 +410,8 @@ def questionnaire_to_rc_record(questionnaire_response: dict) -> dict:
     ):
         return convert_consent(questionnaire_response)
     if q_name == "Demographics":
-        return convert_demo(questionnaire_response)
-    return convert_generic(questionnaire_response)
+        return convert_display_values(questionnaire_response)
+    return convert_scores(questionnaire_response)
 
 
 def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:

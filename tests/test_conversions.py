@@ -11,7 +11,7 @@ from trd_cli.parse_tc import parse_tc
 
 
 class ConversionsTest(TestCase):
-    def test_convert_generic(self):
+    def test_convert_scores(self):
         responses = parse_tc("fixtures")
         self.assertIn("questionnaireresponse.csv", responses)
         expectations = {
@@ -102,6 +102,9 @@ class ConversionsTest(TestCase):
             if q_code not in done:
                 with self.subTest(q_name=q_code):
                     self.fail(f"Did not find a {q_code} row to test in data.")
+
+    def test_convert_display_values(self):
+        raise NotImplementedError
 
     def test_extract_info(self):
         qr_file = "fixtures/patient.csv"
