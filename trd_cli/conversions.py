@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Tuple, List
+from typing import Literal, Tuple, List, Callable
 
 from typing_extensions import TypedDict
 
@@ -24,6 +24,92 @@ class QuestionnaireMetadata(TypedDict):
     code: str
     items: List[str]  # QuestionShortName in TrueColours data
     scores: List[str]  # Name in TrueColours data
+    conversion_fn: Callable[["QuestionnaireMetadata", dict], dict]
+
+
+def get_code_by_name(name: str) -> str|None:
+    qs = [q["code"] for q in QUESTIONNAIRES if q["name"] == name]
+    if len(qs) == 0:
+        return None
+    return qs[0]
+
+
+def convert_consent(_q: QuestionnaireMetadata, questionnaire_data: dict) -> dict:
+    question_scores = questionnaire_data["scores"]["QuestionScores"]
+    out = {
+        "consent_response_id": str(questionnaire_data["id"]),
+        "consent_datetime": questionnaire_data["submitted"],
+    }
+    for q in [
+        *list(range(17)),
+        18,
+    ]:  # Question 18 is not reported because it's a signature
+        question = next(
+            (x for x in question_scores if x["QuestionNumber"] == q + 1), None
+        )
+        out[f"consent_{q + 1}_str"] = question["DisplayValue"]
+
+    return out
+
+
+def convert_display_values(questionnaire: QuestionnaireMetadata, questionnaire_response: dict) -> dict:
+    """
+    Convert a questionnaire where we take the text of the answers rather than the scores.
+    """
+    prefix = questionnaire["code"]
+    out = {
+        f"{prefix}_response_id": str(questionnaire_response["id"]),
+        f"{prefix}_datetime": str(
+            questionnaire_response["interoperability"]["submitted"]
+        ),
+    }
+    scores = questionnaire_response["scores"]
+    for i, k in enumerate(questionnaire["items"]):
+        item = next(
+            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
+        )
+        if not item:
+            LOGGER.warning(f"{prefix}: No {k} in scores")
+            continue
+        out[f"{prefix}_{i + 1}_{k}_str"] = str(item["DisplayValue"])
+
+    return out
+
+
+def convert_scores(questionnaire: QuestionnaireMetadata, questionnaire_response: dict) -> dict:
+    """
+    Convert a questionnaire where we take the scores of the answers.
+    """
+    prefix = questionnaire["code"]
+    out = {
+        f"{prefix}_response_id": str(questionnaire_response["id"]),
+        f"{prefix}_datetime": str(
+            questionnaire_response["interoperability"]["submitted"]
+        ),
+    }
+    scores = questionnaire_response["scores"]
+    for i, k in enumerate(questionnaire["items"]):
+        item = next(
+            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
+        )
+        if not item:
+            LOGGER.warning(f"{prefix}: No {k} in scores")
+            continue
+        out[f"{prefix}_{i + 1}_{k}_float"] = str(item["Score"])
+
+    # Append scores
+    category_scores = scores["CategoryScores"]
+    for c in questionnaire["scores"]:
+        score = next((x for x in category_scores if x["Name"] == c), None)
+        if not score:
+            LOGGER.warning(f"{prefix}: No {c} in category scores")
+            continue
+        out[f"{prefix}_score_{convert_key(c)}_float"] = str(score["Score"])
+    return out
+
+
+def to_rc_record(metadata: RCRecordMetadata, data: dict):
+    return {**metadata, **data}
 
 
 QUESTIONNAIRES: List[QuestionnaireMetadata] = [
@@ -41,6 +127,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "difficult",
         ],
         "scores": ["Total"],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "AQ-10 Autistm Spectrum Quotient (AQ)",
@@ -60,6 +147,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "scores": [
             "Scoring 1"
         ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Adult ADHD Self-Report Scale (ASRS-v1.1) Symptom Checklist Instructions",
@@ -85,6 +173,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "interrupting",
         ],
         "scores": [],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Alcohol use disorders identification test (AUDIT)",
@@ -107,6 +196,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "Higher Risk",
             "Possible Dependence",
         ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Brooding subscale of Ruminative Response Scale",
@@ -120,7 +210,8 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         ],
         "scores": [
             "Scoring 1"
-        ]
+        ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Demographics",
@@ -158,6 +249,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "education_other",
         ],
         "scores": [],
+        "conversion_fn": convert_display_values,
     },
     {
         "name": "Depression (PHQ-9)",
@@ -174,6 +266,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "self_harm",
         ],
         "scores": ["Total"],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Drug use disorders identification test (DUDIT)",
@@ -194,6 +287,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "scores": [
             "Scoring"
         ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Mania (Altman)",
@@ -206,12 +300,14 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "activity",
         ],
         "scores": ["Total"],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form",
         "code": "consent",
         "items": [],
         "scores": [],
+        "conversion_fn": convert_consent,
     },
     {
         "name": "Positive Valence Systems Scale, 21 items (PVSS-21)",
@@ -254,6 +350,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "Initial Responsiveness",
             "Reward Satiation"
         ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "ReQoL 10",
@@ -272,6 +369,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "pysical_health",  # sic
         ],
         "scores": ["Total"],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Standardised Assessment of Personality - Abbreviated Scale (Moran)",
@@ -289,6 +387,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "scores": [
             "Scoring 1"
         ],
+        "conversion_fn": convert_scores,
     },
     {
         "name": "Work and Social Adjustment Scale",
@@ -301,117 +400,22 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "family",
         ],
         "scores": ["Total"],
+        "conversion_fn": convert_scores,
     },
 ]
-
-
-def get_code_by_name(name: str) -> str:
-    return list([q["code"] for q in QUESTIONNAIRES if q["name"] == name])[0]
-
-
-def convert_consent(data: dict) -> dict:
-    question_scores = data["scores"]["QuestionScores"]
-    out = {
-        "consent_response_id": str(data["id"]),
-        "consent_datetime": data["submitted"],
-    }
-    for q in [
-        *list(range(17)),
-        18,
-    ]:  # Question 18 is not reported because it's a signature
-        question = next(
-            (x for x in question_scores if x["QuestionNumber"] == q + 1), None
-        )
-        out[f"consent_{q + 1}_str"] = question["DisplayValue"]
-
-    return out
-
-
-def convert_display_values(questionnaire_response: dict) -> dict:
-    """
-    Convert a questionnaire where we take the text of the answers rather than the scores.
-    """
-    questionnaire = list(
-        filter(
-            lambda q: q["name"] == questionnaire_response["interoperability"]["title"],
-            QUESTIONNAIRES,
-        )
-    )[0]
-    prefix = questionnaire["code"]
-    out = {
-        f"{prefix}_response_id": str(questionnaire_response["id"]),
-        f"{prefix}_datetime": str(
-            questionnaire_response["interoperability"]["submitted"]
-        ),
-    }
-    scores = questionnaire_response["scores"]
-    for i, k in enumerate(questionnaire["items"]):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
-        )
-        if not item:
-            LOGGER.warning(f"{prefix}: No {k} in scores")
-            continue
-        out[f"{prefix}_{i + 1}_{k}_str"] = str(item["DisplayValue"])
-
-    return out
-
-
-def convert_scores(questionnaire_response: dict) -> dict:
-    """
-    Convert a questionnaire where we take the scores of the answers.
-    """
-    questionnaire = list(
-        filter(
-            lambda q: q["name"] == questionnaire_response["interoperability"]["title"],
-            QUESTIONNAIRES,
-        )
-    )[0]
-    prefix = questionnaire["code"]
-    out = {
-        f"{prefix}_response_id": str(questionnaire_response["id"]),
-        f"{prefix}_datetime": str(
-            questionnaire_response["interoperability"]["submitted"]
-        ),
-    }
-    scores = questionnaire_response["scores"]
-    for i, k in enumerate(questionnaire["items"]):
-        item = next(
-            (x for x in scores["QuestionScores"] if x["QuestionNumber"] == i + 1), None
-        )
-        if not item:
-            LOGGER.warning(f"{prefix}: No {k} in scores")
-            continue
-        out[f"{prefix}_{i + 1}_{k}_float"] = str(item["Score"])
-
-    # Append scores
-    category_scores = scores["CategoryScores"]
-    for c in questionnaire["scores"]:
-        score = next((x for x in category_scores if x["Name"] == c), None)
-        if not score:
-            LOGGER.warning(f"{prefix}: No {c} in category scores")
-            continue
-        out[f"{prefix}_score_{convert_key(c)}_float"] = str(score["Score"])
-    return out
-
-
-def to_rc_record(metadata: RCRecordMetadata, data: dict):
-    return {**metadata, **data}
-
 
 def questionnaire_to_rc_record(questionnaire_response: dict) -> dict:
     """
     Convert a questionnaire response to a REDCap record.
     """
     q_name = questionnaire_response["interoperability"]["title"]
-    if (
-        q_name
-        == "MENTAL HEALTH MISSION MOOD DISORDER COHORT STUDY - Patient Information Sheet & Informed Consent Form"
-    ):
-        return convert_consent(questionnaire_response)
-    if q_name == "Demographics":
-        return convert_display_values(questionnaire_response)
-    return convert_scores(questionnaire_response)
+    q = list(filter(lambda x: x["name"] == q_name, QUESTIONNAIRES))
+    if len(q) == 0:
+        # This should never happen because questionnaire_response will already have been vetted
+        raise ValueError(f"Unrecognised questionnaire name {q_name}")
+    else:
+        q = q[0]
+    return q["conversion_fn"](q, questionnaire_response)
 
 
 def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
