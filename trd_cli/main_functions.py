@@ -1,7 +1,10 @@
 import subprocess
 from typing import Tuple, List
 
-from trd_cli.conversions import QUESTIONNAIRES, extract_participant_info, questionnaire_to_rc_record, get_code_by_name
+from redcap import Project
+
+from trd_cli.conversions import extract_participant_info
+from trd_cli.questionnaires import QUESTIONNAIRES, questionnaire_to_rc_record, get_redcap_structure, get_code_by_name
 from trd_cli.parse_tc import parse_tc
 
 import logging
@@ -129,3 +132,25 @@ def compare_tc_to_rc(tc_data: dict, redcap_id_data: List[dict]) -> Tuple[dict, l
                 }
             )
     return new_participants, new_responses
+
+
+def is_redcap_structure_valid(redcap_project: Project, raise_error: bool = False) -> bool|None:
+    """
+    Check if the REDCap structure is valid. 
+    This can only check if all the required fields are present, not that they belong to the appropriate instruments.
+    It can also not check anything if there are no records in REDCap.
+    In that case, it returns None rather than False.
+    """
+    required_structure = get_redcap_structure()
+    redcap_structure = redcap_project.export_records()
+    if len(redcap_structure) == 0:
+        if raise_error:
+            raise ValueError("No records found in REDCap")
+        return None
+    for r, v in required_structure.items():
+        for var in v:
+            if var not in redcap_structure[0].keys():
+                if raise_error:
+                    raise ValueError(f"Missing field {var} in REDCap structure.")
+                return False
+    return True

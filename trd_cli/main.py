@@ -5,9 +5,7 @@ from redcap import Project
 import click
 import requests
 
-from trd_cli.conversions import (
-    QUESTIONNAIRES,
-)
+from trd_cli.questionnaires import QUESTIONNAIRES, dump_redcap_structure
 from trd_cli.main_functions import extract_redcap_ids, get_true_colours_data, compare_tc_to_rc
 
 # Construct a logger that saves logged events to a dictionary that we can attach to an email later
@@ -217,6 +215,22 @@ def cli():
         LOGGER.exception(e)
         click.echo(f"{e.__class__.__name__}: {e}", err=True)
         exit(1)
+
+
+# Allow dumping the REDCap structure to a given file
+@click.command()
+@click.option(
+    "--output",
+    "-o",
+    default="redcap_structure.txt",
+    help="Output file to dump the REDCap structure to.",
+    type=click.Path(dir_okay=False, writable=True, resolve_path=True)
+)
+def export_redcap_structure(output):
+    """
+    Export the required REDCap structure to a file so that REDCap can be correctly configured for the project.
+    """
+    dump_redcap_structure(output)
 
 
 if __name__ == "__main__":

@@ -35,9 +35,12 @@ REDCap doesn't allow direct database access, however, so we need to create fake 
 
 The quick way to set up the REDCap project is still quite slow, but it's faster than the long way.
 
-1. Make sure you have all the questionnaires you need in your test dataset (`tests/fixtures/*.csv`).
-2. Run `tests/fixtures/tc_to_fixture.py`.
-3. Open the `tests/fixtures/rc_variables.txt` file created by the script.
+#### Generate a list of variables
+
+Run `python trd_cli.py export_redcap_structure -o rc_variables.txt` to export the variables from the True Colours data.
+This will output a file called `rc_variables.txt` in the current directory.
+It will contain the names of the instruments and all the fields that will be exported for those instruments for 
+all the questionnaires the tool knows about.
 
 The `rc_variables.txt` file will look like this:
 
@@ -49,7 +52,9 @@ field_3_name
 ...
 ```
 
-4. For each line with `######` at the start and end, create an instrument with the fields listed below it.
+#### Create the instruments in REDCap
+
+For each line with `######` at the start and end, create an instrument with the fields listed below it.
 
 You should use `instrument_name` as the name of the instrument in REDCap, although this is not strictly necessary.
 The field names must be copied exactly as they appear in the file.

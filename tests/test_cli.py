@@ -7,11 +7,12 @@ import os
 import subprocess
 import requests
 
-from trd_cli.conversions import QUESTIONNAIRES
-from trd_cli.main import cli
+from trd_cli.questionnaires import QUESTIONNAIRES
+from trd_cli.main import cli, export_redcap_structure
 from trd_cli.main_functions import compare_tc_to_rc
 
 cli: Command  # annotating to avoid linter warnings
+export_redcap_structure: Command
 
 
 class CliTest(TestCase):
@@ -198,6 +199,16 @@ class CliTest(TestCase):
         
         self.assertEqual(result.exit_code, 0, result.output)
 
+    def test_export_redcap_structure(self):
+        """
+        Test exporting the REDCap structure to a file
+        """
+        runner = CliRunner()
+        result = runner.invoke(export_redcap_structure, "--output ./.redcap_structure.txt")
+
+        self.assertEqual(result.exit_code, 0, result.output)
+        self.assertTrue(os.path.exists("./.redcap_structure.txt"))
+    
 
 if __name__ == "__main__":
     main()

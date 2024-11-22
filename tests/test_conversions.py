@@ -5,16 +5,14 @@ from unittest import TestCase, main
 
 from trd_cli.conversions import (
     extract_participant_info,
-    questionnaire_to_rc_record, get_code_by_name,
 )
+from trd_cli.questionnaires import questionnaire_to_rc_record, get_redcap_structure, get_code_by_name
 from trd_cli.parse_tc import parse_tc
 
 
 class ConversionsTest(TestCase):
-    def test_convert_scores(self):
-        responses = parse_tc("fixtures")
-        self.assertIn("questionnaireresponse.csv", responses)
-        expectations = {
+    def setUp(self):
+        self.expectations = {
             "phq9": {
                 "phq9_response_id": "1589930675",
                 "phq9_datetime": "2024-11-04T12:59:24.9477348+00:00",
@@ -79,6 +77,10 @@ class ConversionsTest(TestCase):
                 "wsas_score_total_float": "21.0",
             },
         }
+
+    def test_convert_scores(self):
+        responses = parse_tc("fixtures")
+        self.assertIn("questionnaireresponse.csv", responses)
         done = []
         for r in responses["questionnaireresponse.csv"]:
             interop = r.get("interoperability")
@@ -88,7 +90,7 @@ class ConversionsTest(TestCase):
                 if q_code is not None and q_code not in done:
                     with self.subTest(q_name=q_code):
                         done.append(q_code)
-                        if q_code not in expectations.keys():
+                        if q_code not in self.expectations.keys():
                             if q_code == "consent":
                                 continue
                             else:
@@ -96,9 +98,9 @@ class ConversionsTest(TestCase):
                                     f"Unhandled questionnaire response of type {q_code}."
                                 )
                         result = questionnaire_to_rc_record(r)
-                        self.assertEqual(expectations[q_code], result)
+                        self.assertEqual(self.expectations[q_code], result)
 
-        for q_code in expectations.keys():
+        for q_code in self.expectations.keys():
             if q_code not in done:
                 with self.subTest(q_name=q_code):
                     self.fail(f"Did not find a {q_code} row to test in data.")
@@ -141,6 +143,22 @@ class ConversionsTest(TestCase):
             },
             public,
         )
+
+    def test_redcap_dump(self):
+        dump = get_redcap_structure()
+        self.assertIn("private", dump)
+        self.assertIsInstance(dump["private"], list)
+        for f in ["id", "nhsnumber", "birthdate", "contactemail", "mobilenumber", "firstname", "lastname", "preferredcontact"]:
+            self.assertIn(f, dump["private"])
+        self.assertIn("info", dump)
+        self.assertIsInstance(dump["info"], list)
+        for f in ["info_birthyear_int", "info_datetime", "info_deceased_datetime", "info_gender_int", "info_is_deceased_bool"]:
+            self.assertIn(f, dump["info"])
+        for k, v in self.expectations.items():
+            self.assertIn(k, dump)
+            self.assertIsInstance(dump[k], list)
+            for f in v.keys():
+                self.assertIn(f, dump[k])
 
 
 if __name__ == "__main__":
