@@ -107,6 +107,9 @@ def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
 
     Return a dict of `private` information and public `info`rmation.
     """
+    def is_test_nhs_number(nhs_number: str) -> bool:
+        return nhs_number.startswith("999")
+    
     keep_fields = [
         "id",
         "nhsnumber",
@@ -127,8 +130,7 @@ def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
         "info_datetime": now,
         "info_birthyear_int": patient_csv_data.get("birthdate").split("-")[0],
         "info_gender_int": patient_csv_data.get("gender"),
+        "info_is_test_bool": is_test_nhs_number(patient_csv_data.get("nhsnumber")),
         "info_is_deceased_bool": patient_csv_data.get("deceasedboolean"),
         "info_deceased_datetime": patient_csv_data.get("deceaseddatetime"),
     }
-
-

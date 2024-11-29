@@ -153,7 +153,7 @@ Below, you will find a description of each property and how it relates to True C
 Corresponds to the **Title** field in the True Colours Questionnaire Builder. 
 It is _not the Name field_.
 
-## `code`
+### `code`
 
 This is the short questionnaire identifier used for REDCap. 
 It does not relate to anything in True Colours. 

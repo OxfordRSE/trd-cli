@@ -63,7 +63,7 @@ class ConversionsTest(TestCase):
                 "reqol10_8_felt_hopeful_float": "3.0",
                 "reqol10_9_felt_lonely_float": "2.0",
                 "reqol10_10_confident_in_self_float": "2.0",
-                "reqol10_11_pysical_health_float": "4.0",
+                "reqol10_11_physical_health_float": "4.0",
                 "reqol10_score_total_float": "24.0",
             },
             "wsas": {
@@ -140,6 +140,7 @@ class ConversionsTest(TestCase):
                 "info_deceased_datetime": "",
                 "info_gender_int": "1",
                 "info_is_deceased_bool": "",
+                'info_is_test_bool': False,
             },
             public,
         )
@@ -152,7 +153,7 @@ class ConversionsTest(TestCase):
             self.assertIn(f, dump["private"])
         self.assertIn("info", dump)
         self.assertIsInstance(dump["info"], list)
-        for f in ["info_birthyear_int", "info_datetime", "info_deceased_datetime", "info_gender_int", "info_is_deceased_bool"]:
+        for f in ["info_birthyear_int", "info_datetime", "info_deceased_datetime", "info_gender_int", "info_is_deceased_bool", "info_is_test_bool"]:
             self.assertIn(f, dump["info"])
         for k, v in self.expectations.items():
             self.assertIn(k, dump)

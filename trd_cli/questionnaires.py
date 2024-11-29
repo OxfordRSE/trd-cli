@@ -36,7 +36,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "intentions_real"
         ],
         "scores": [
-            "Scoring 1"
+            "Total"
         ],
         "conversion_fn": convert_scores,
     },
@@ -257,7 +257,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
             "felt_hopeful",
             "felt_lonely",
             "confident_in_self",
-            "pysical_health",  # sic
+            "physical_health",  # sic
         ],
         "scores": ["Total"],
         "conversion_fn": convert_scores,
