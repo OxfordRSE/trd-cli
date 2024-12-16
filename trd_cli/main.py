@@ -309,7 +309,7 @@ def run(
 
 
 # Allow dumping the REDCap structure to a given file
-@click.command()
+@cli.command()
 @click.argument(
     "output",
     required=False,
