@@ -18,6 +18,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 @click.group()
+@click.version_option()
+@click.help_option()
 def cli():
     pass
 
@@ -85,6 +87,7 @@ def cli():
     default=lambda: os.environ.get("TRD_LOG_LEVEL", "INFO"),
     show_default="INFO",
 )
+@click.help_option()
 def run(
         rc_url,
         rc_token,
@@ -96,7 +99,6 @@ def run(
         dry_run,
         log_dir,
         log_level,
-        **kwargs
 ):
     """
     Run the TRD CLI.
@@ -313,6 +315,7 @@ def run(
     required=False,
     type=click.Path(dir_okay=False, writable=True, resolve_path=True)
 )
+@click.help_option()
 def dump(output):
     """
     Export the required REDCap structure so that REDCap can be correctly configured for the project.
