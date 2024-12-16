@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from trd_cli.conversions import QuestionnaireMetadata, convert_scores, convert_display_values, convert_consent, \
     RCRecordMetadata, extract_participant_info
@@ -382,22 +382,28 @@ def get_redcap_structure() -> Dict[str, List[str]]:
     return dump
 
 
-def dump_redcap_structure(filename: str = "redcap_structure.txt"):
+def dump_redcap_structure(filename: Union[str, None]):
     """
     Dump the REDCap structure to a file.
     This is useful for setting up REDCap to handle the incoming data.
     """
-    dump = get_redcap_structure() 
-    with open(filename, "w+") as f:
-        for k in dump.keys():
-            f.write(f"###### {k} ######\n")
-            vv = sorted(dump[k])
-            for x in vv:
-                f.write(f"{x}\n")
-            f.write("\n")
+    dump = get_redcap_structure()
+    lines = []
+    for k in dump.keys():
+        lines.append(f"###### {k} ######")
+        vv = sorted(dump[k])
+        for x in vv:
+            lines.append(f"{x}")
+        lines.append("")
+
+    if filename is None:
+        print("\n".join(lines))
+    else:
+        with open(filename, "w+") as f:
+            f.write("\n".join(lines))
 
 
-def get_code_by_name(name: str) -> str|None:
+def get_code_by_name(name: str) -> Union[str, None]:
     qs = [q["code"] for q in QUESTIONNAIRES if q["name"] == name]
     if len(qs) == 0:
         return None

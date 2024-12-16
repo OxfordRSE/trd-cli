@@ -7,29 +7,47 @@ This CLI performs automated data collection and curation for the TRD Database pr
 
 ## Deployment
 
-The tool is deployed to ECS on AWS by deploying it as a `docker` container.
-The `Dockerfile` is included in the repository.
+The tool is deployed to a standalone Oxford MSD IT server. 
+It runs regularly as a Cron job that runs the command `trd-cli run`.
 
-The AWS systems are set up using `terraform` and the configuration is included in the `.tf` files.
-The core setup is in the `aws.tf` file.
+The `trd-cli` command is installed as a system-wide command using the `setup.py` file in the repository.
 
-Variables are declared in the `variables.tf` file, and their actual values are exported in `secret.tfvars`.
-The contents of `secret.tfvars` are not included in the repository.
+## `trd-cli` command
 
-`secrets.tfvars` should be created in the root directory of the repository and should contain the following variables:
-```
-# secrets.tfvars
+The `trd-cli` command is the entry point for the tool.
+It has two subcommands: `run` and `dump`.
 
-redcap_secret        = "your_redcap_secret_value"
-true_colours_secret  = "your_true_colours_secret_value"
-mailgun_secret       = "your_mailgun_secret_value"
-```
+### `run`
+
+Run a single fetch-parse-compare-upload cycle for the True Colours and REDCap data.
+All configuration options may be specified as arguments to the command or as environment variables.
+For those that are marked as required, they must be specified in one of these ways.
+Command line arguments take precedence over environment variables.
+
+| Option          | Environment Variable       | Required | Description                                |
+|-----------------|----------------------------|----------|--------------------------------------------|
+| `--rc-url`      | `TRD_REDCAP_URL`           | Yes      | The URL of the REDCap API endpoint         |
+| `--rc-token`    | `TRD_REDCAP_TOKEN`         | Yes      | The API token for the REDCap project       |
+| `--tc-archive`  | `TRD_TRUE_COLOURS_ARCHIVE` | Yes      | File path to the True Colours data archive |
+| `--mailto`      | `TRD_MAILTO_ADDRESS`       | No       | The email address to send emails to        |
+| `--mg-secret`   | `TRD_MAILGUN_SECRET`       | No*      | The Mailgun API secret                     |
+| `--mg-domain`   | `TRD_MAILGUN_DOMAIN`       | No*      | The Mailgun domain                         |
+| `--mg-username` | `TRD_MAILGUN_USERNAME`     | No*      | The Mailgun username                       |
+| `--dry-run`     | _None_                     | No       | If set, the tool will not upload to REDCap |
+| `--log-dir`     | `TRD_LOG_DIR`              | No       | The directory to write log files to        |
+| `--log-level`   | `TRD_LOG_LEVEL`            | No       | The level of logging to use                |
+* Required if `mailto` is specified
+
+### `dump`
+
+Export the structure of the True Colours data to a file that can be used to create the REDCap project.
+This command has one option: `-o` or `--output`, which specifies the output file path.
+If the output file path is not specified, the output will be written to `stdout`.
 
 ## REDCap setup
 
 The project converts True Colours data to REDCap data.
 REDCap doesn't allow direct database access, however, so we need to create fake instruments in REDCap to store the data.
-
 
 ### The quick way
 
@@ -37,7 +55,7 @@ The quick way to set up the REDCap project is still quite slow, but it's faster 
 
 #### Generate a list of variables
 
-Run `python trd_cli.py export_redcap_structure -o rc_variables.txt` to export the variables from the True Colours data.
+Run `trd-cli dump -o rc_variables.txt` to export the variables from the True Colours data.
 This will output a file called `rc_variables.txt` in the current directory.
 It will contain the names of the instruments and all the fields that will be exported for those instruments for 
 all the questionnaires the tool knows about.
@@ -206,7 +224,6 @@ pre-commit install
 
 The following hooks are used in this repository:
 - `ruff` Python code formatter and linter
-- `terraform` Terraform code formatter and linter
 - a few of the `pre-commit` default hooks
 
 ## Citations

@@ -18,9 +18,3 @@ repos:
       args: [ --fix ]
     # Run the formatter.
     - id: ruff-format
-
-- repo: https://github.com/antonbabenko/pre-commit-terraform
-  rev: v1.96.1 # Get the latest from: https://github.com/antonbabenko/pre-commit-terraform/releases
-  hooks:
-    - id: terraform_fmt
-    - id: terraform_validate

@@ -1,3 +1,4 @@
+import os
 import subprocess
 from typing import Tuple, List
 
@@ -62,16 +63,15 @@ def extract_redcap_ids(records) -> dict:
     return out
 
 
-def get_true_colours_data(true_colours_secret, true_colours_url, true_colours_username):
-    tc_dir = "tc_data"
-    subprocess.run(
-        f"scp {true_colours_username}@{true_colours_url} -i {true_colours_secret} dump.zip {tc_dir}/dump.zip",
-        check=True,
-    )
+def get_true_colours_data(tc_dir: str) -> dict:
+    tmp_dir = ".run"
+    os.makedirs(tmp_dir, exist_ok=True)
     # unzip the archive
-    subprocess.run(f"unzip {tc_dir}/dump.zip", check=True)
+    subprocess.run(f"unzip {tc_dir} -d {tmp_dir}", check=True)
     # We now have a directory of csv files (actually pipe-separated) we can load as a dict
     tc_data = parse_tc(tc_dir)
+    # Clean up
+    subprocess.run(f"rm -rf {tmp_dir}", check=True)
     return tc_data
 
 

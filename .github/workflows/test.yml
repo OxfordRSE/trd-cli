@@ -30,3 +30,8 @@ jobs:
               file: ./tests/coverage.xml
               flags: unittests
               fail_ci_if_error: false
+
+          - name: Check shell command
+            run: trd-cli --version
+          - name: Check export
+            run: trd-cli dump dump.txt

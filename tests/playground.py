@@ -6,11 +6,11 @@ from trd_cli.parse_tc import parse_tc
 
 
 class PlaygroundTestCase(unittest.TestCase):
-    redcap_secret = None
-    redcap_researcher_secret = None
+    REDCAP_TOKEN = None
+    REDCAP_RESEARCHER_SECRET = None
 
     def setUp(self):
-        with open("../secrets.tfvars", "r") as f:
+        with open("../.env.local", "r") as f:
             secrets = f.readlines()
             for line in secrets:
                 s = line.split("=")
@@ -26,21 +26,21 @@ class PlaygroundTestCase(unittest.TestCase):
                 self.exports[directory] = data
 
     def test_redcap_package(self):
-        project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_secret)
+        project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.REDCAP_TOKEN)
         records = project.export_records()
         self.assertGreater(len(records), 0)
         self.assertIn("nhsnumber", records[0])
 
     def test_redcap_package_researcher(self):
         project = Project(
-            "https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_researcher_secret
+            "https://redcaptest.medsci.ox.ac.uk/api/", self.REDCAP_RESEARCHER_SECRET
         )
         records = project.export_records()
         self.assertGreater(len(records), 0)
         self.assertNotIn("nhsnumber", records[0])
 
     def test_redcap_package_import(self):
-        project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.redcap_secret)
+        project = Project("https://redcaptest.medsci.ox.ac.uk/api/", self.REDCAP_TOKEN)
         data = [
             {
                 "study_id": "102",

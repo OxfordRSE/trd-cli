@@ -4,30 +4,29 @@ from unittest import mock, TestCase, main
 from click.testing import CliRunner
 from click.core import Command
 import os
-import subprocess
 import requests
 
 from trd_cli.questionnaires import QUESTIONNAIRES
-from trd_cli.main import cli, export_redcap_structure
+from trd_cli.main import run, dump
 from trd_cli.main_functions import compare_tc_to_rc
 
-cli: Command  # annotating to avoid linter warnings
-export_redcap_structure: Command
+run: Command  # annotating to avoid linter warnings
+dump: Command
 
 
 class CliTest(TestCase):
     def setUp(self):
         # Setting up environment variables using enterContext to mock them for all tests
         env_vars = {
-            "REDCAP_SECRET": "some_env_var_value",
-            "REDCAP_URL": "some_env_var_value",
-            "TRUE_COLOURS_SECRET": "some_env_var_value",
-            "TRUE_COLOURS_USERNAME": "some_env_var_value",
-            "TRUE_COLOURS_URL": "some_env_var_value",
-            "MAILGUN_DOMAIN": "some_env_var_value",
-            "MAILGUN_USERNAME": "some_env_var_value",
-            "MAILGUN_SECRET": "some_env_var_value",
-            "MAILTO_ADDRESS": "some_env_var_value",
+            "TRD_REDCAP_URL": "some_env_var_value",
+            "TRD_REDCAP_TOKEN": "some_env_var_value",
+            "TRD_TRUE_COLOURS_ARCHIVE": "fixtures/tc.zip",
+            "TRD_MAILTO_ADDRESS": "some_env_var_value",
+            "TRD_MAILGUN_SECRET": "some_env_var_value",
+            "TRD_MAILGUN_DOMAIN": "some_env_var_value",
+            "TRD_MAILGUN_USERNAME": "some_env_var_value",
+            "TRD_LOG_DIR": ".test_logs",
+            "TRD_LOG_LEVEL": "DEBUG",
         }
         self.enterContext(mock.patch.dict(os.environ, env_vars))
 
@@ -81,24 +80,12 @@ class CliTest(TestCase):
             import_records_side_effect
         )
 
-    def test_scp_download_failure(self):
-        """Test SCP download failure scenario."""
-        self.subprocess_run_mock.side_effect = subprocess.CalledProcessError(1, "scp")
-
-        runner = CliRunner()
-        result = runner.invoke(cli)
-
-        self.assertNotEqual(result.exit_code, 0)
-        self.assertIn(
-            "Downloading True Colours dump from scp server - ERROR", result.output
-        )
-
     def test_redcap_api_failure(self):
         """Test REDCap API failure scenario."""
         self.redcap_project_mock.side_effect = Exception("REDCap API error")
 
         runner = CliRunner()
-        result = runner.invoke(cli)
+        result = runner.invoke(run)
 
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn("Downloading data from REDCap - ERROR", result.output)
@@ -107,17 +94,17 @@ class CliTest(TestCase):
         self.subprocess_run_mock.return_value = 0
 
         runner = CliRunner()
-        result = runner.invoke(cli)
+        result = runner.invoke(run)
 
         self.assertEqual(
-            result.exit_code, 0, f"cli exit code {result.exit_code}:\n\n{result.output}"
+            result.exit_code, 0, f"run exit code {result.exit_code}:\n\n{result.output}"
         )
         self.requests_post_mock.assert_called_once()
 
         email_html = self.requests_post_mock.call_args[1]["data"]["html"]
         self.assertIn("New Participants: 2", email_html)
         self.assertIn("New Responses: 1", email_html)
-        self.assertIn("Log File (0 Errors, 7 Warnings)", email_html)
+        self.assertIn("Log File (0 Errors, 0 Warnings)", email_html)
         self.assertIn(" INFO ", email_html)
 
     def test_email_sending_failure(self):
@@ -132,7 +119,7 @@ class CliTest(TestCase):
         )
 
         runner = CliRunner()
-        result = runner.invoke(cli)
+        result = runner.invoke(run)
 
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn("Sending email summary - ERROR", result.output)
@@ -185,7 +172,7 @@ class CliTest(TestCase):
         self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: list()
         
         runner = CliRunner()
-        result = runner.invoke(cli)
+        result = runner.invoke(run)
 
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertIn("4 new participants; 3 new responses.", result.output)
@@ -195,7 +182,7 @@ class CliTest(TestCase):
         self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: redcap_from_tc(initial_data)
 
         runner = CliRunner()
-        result = runner.invoke(cli)
+        result = runner.invoke(run)
         
         self.assertEqual(result.exit_code, 0, result.output)
 
@@ -204,7 +191,7 @@ class CliTest(TestCase):
         Test exporting the REDCap structure to a file
         """
         runner = CliRunner()
-        result = runner.invoke(export_redcap_structure, "--output ./.redcap_structure.txt")
+        result = runner.invoke(dump, "./.redcap_structure.txt")
 
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertTrue(os.path.exists("./.redcap_structure.txt"))

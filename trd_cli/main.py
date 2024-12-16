@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 
@@ -11,55 +12,141 @@ from trd_cli.main_functions import extract_redcap_ids, get_true_colours_data, co
 # Construct a logger that saves logged events to a dictionary that we can attach to an email later
 import logging
 from logging.config import dictConfig
-from trd_cli.log_config import LOGGING_CONFIG
-
-dictConfig(LOGGING_CONFIG)
+from trd_cli.log_config import get_config
 
 LOGGER = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
 def cli():
+    pass
+
+
+@cli.command()
+@click.option(
+    "--rc-url",
+    help="The URL to connect to the REDCap API.",
+    type=str,
+    default=lambda: os.environ.get("TRD_REDCAP_URL"),
+)
+@click.option(
+    "--rc-token",
+    help="The secret to connect to the REDCap API.",
+    type=str,
+    default=lambda: os.environ.get("TRD_REDCAP_TOKEN"),
+)
+@click.option(
+    "--tc-archive",
+    help="The True Colours data archive .zip file.",
+    type=click.Path(exists=True, dir_okay=False, readable=True, resolve_path=True),
+    default=lambda: os.environ.get("TRD_TRUE_COLOURS_ARCHIVE"),
+)
+@click.option(
+    "--mailto",
+    help="The email address to send the summary to. If blank, no email will be sent.",
+    type=str,
+    default=lambda: os.environ.get("TRD_MAILTO_ADDRESS"),
+)
+@click.option(
+    "--mg-secret",
+    help="The secret for the Mailgun API.",
+    type=str,
+    default=lambda: os.environ.get("TRD_MAILGUN_SECRET"),
+)
+@click.option(
+    "--mg-domain",
+    help="The domain for the Mailgun API.",
+    type=str,
+    default=lambda: os.environ.get("TRD_MAILGUN_DOMAIN"),
+)
+@click.option(
+    "--mg-username",
+    help="The username for the Mailgun API.",
+    type=str,
+    default=lambda: os.environ.get("TRD_MAILGUN_USERNAME"),
+)
+@click.option(
+    "--dry-run",
+    help="Don't actually upload to REDCap.",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "--log-dir",
+    help="The directory to save the log file to.",
+    type=click.Path(file_okay=False, writable=True, resolve_path=True),
+    default=lambda: os.environ.get("TRD_LOG_DIR", "/var/log/trd_cli"),
+    show_default="/var/log/trd_cli",
+)
+@click.option(
+    "--log-level",
+    help="The log level to use.",
+    type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]),
+    default=lambda: os.environ.get("TRD_LOG_LEVEL", "INFO"),
+    show_default="INFO",
+)
+def run(
+        rc_url,
+        rc_token,
+        tc_archive,
+        mailto,
+        mg_secret,
+        mg_domain,
+        mg_username,
+        dry_run,
+        log_dir,
+        log_level,
+        **kwargs
+):
     """
     Run the TRD CLI.
 
     Will connect to the TRD API and run the CLI.
+    Running the CLI has several steps:
+    1. Unpack the True Colours data.
+    2. Download existing REDCap data.
+    3. Compare the True Colours data to the REDCap data.
+    4. Upload any new data to REDCap.
+    5. Send an email summary of the changes. (optional)
 
-    All arguments are taken from environment variables.
-    These are:
-
-    - `REDCAP_SECRET`: The secret to connect to the REDCap API.
-    - `REDCAP_URL`: The URL to connect to the REDCap API.
-    - `TRUE_COLOURS_SECRET`: The secret to connect to the True Colours `scp` server.
-    - `TRUE_COLOURS_USERNAME`: The username to connect to the True Colours `scp` server.
-    - `TRUE_COLOURS_URL`: The URL to connect to the True Colours `scp` server.
+    All arguments can be supplied as environment variables.
     """
     try:
+        # Logfile has the date and time of the run
+        log_file = os.path.join(log_dir, f"trd_cli-{datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')}.log")
+        dictConfig(get_config(log_file))
+        LOGGER.setLevel(log_level)
+        
         click.echo("Running TRD CLI")
 
         # Verify that all environment variables are set
-        click.echo("Checking environment variables", nl=False)
-        redcap_secret = os.environ["REDCAP_SECRET"]
-        redcap_url = os.environ["REDCAP_URL"]
-        true_colours_secret = os.environ["TRUE_COLOURS_SECRET"]
-        true_colours_username = os.environ["TRUE_COLOURS_USERNAME"]
-        true_colours_url = os.environ["TRUE_COLOURS_URL"]
-        mailgun_domain = os.environ["MAILGUN_DOMAIN"]
-        mailgun_username = os.environ["MAILGUN_USERNAME"]
-        mailgun_secret = os.environ["MAILGUN_SECRET"]
-        mailto_address = os.environ["MAILTO_ADDRESS"]
+        click.echo("Checking configuration", nl=False)
+        required = {
+            "rc_url": rc_url,
+            "rc_token": rc_token,
+            "tc_archive": tc_archive,
+        }
+        if mailto is not None:
+            required = {
+                **required,
+                "mailto": mailto,
+                "mg_secret": mg_secret,
+                "mg_domain": mg_domain,
+                "mg_username": mg_username,
+            }
+        for k, v in required.items():
+            if v is None:
+                raise ValueError(f"Missing required argument: {k}")
         click.echo(" - OK")
 
         # Connect to the True Colours scp server and download the zip dump
-        click.echo("Downloading True Colours dump from scp server", nl=False)
-        tc_data = get_true_colours_data(
-            true_colours_secret, true_colours_url, true_colours_username
-        )
+        click.echo("Unpacking True Colours archive", nl=False)
+        tc_data = get_true_colours_data(tc_archive)
         click.echo(" - OK")
 
         # Download data from the REDCap API
         click.echo("Downloading data from REDCap", nl=False)
-        redcap_project = Project(redcap_url, redcap_secret)
+        redcap_project = Project(rc_url, rc_token)
         redcap_records = redcap_project.export_records(
             fields=[
                 "study_id",
@@ -89,11 +176,12 @@ def cli():
                 try:
                     new_id = redcap_project.generate_next_record_name()
                     id_map[p_id] = new_id
-                    rc_response = redcap_project.import_records([
-                        {"study_id": new_id, **data["private"]},
-                        {"study_id": new_id, **data["info"]},
-                    ])
-                    assert rc_response["count"] == 2, f"Failed to import record for {p_id}."
+                    if not dry_run:
+                        rc_response = redcap_project.import_records([
+                            {"study_id": new_id, **data["private"]},
+                            {"study_id": new_id, **data["info"]},
+                        ])
+                        assert rc_response["count"] == 2, f"Failed to import record for {p_id}."
                     new_participants_success_count += 1
                 except Exception as e:
                     LOGGER.exception(e)
@@ -108,21 +196,22 @@ def cli():
                     else:
                         r["study_id"] = id_map[p_id]
                 patched_responses.append(r)
-            rc_response_r = redcap_project.import_records(patched_responses)
-            if rc_response_r["count"] != len(new_responses):
-                LOGGER.error(
-                    (
-                        f"Failed to import all new questionnaire responses. "
-                        f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
+            if not dry_run:
+                rc_response_r = redcap_project.import_records(patched_responses)
+                if rc_response_r["count"] != len(new_responses):
+                    LOGGER.error(
+                        (
+                            f"Failed to import all new questionnaire responses. "
+                            f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
+                        )
                     )
-                )
-            else:
-                LOGGER.info(
-                    (
-                        f"Added {len(new_responses)} new questionnaire responses: "
-                        f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
+                else:
+                    LOGGER.info(
+                        (
+                            f"Added {len(new_responses)} new questionnaire responses: "
+                            f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
+                        )
                     )
-                )
 
         click.echo(" - OK")
         click.echo(
@@ -130,7 +219,6 @@ def cli():
         )
 
         # Scan logs and count errors and warnings
-        log_file = "trd_cli.log"
         with open(log_file, "r") as f:
             log_data = f.read()
         error_count = log_data.count("ERROR")
@@ -138,47 +226,48 @@ def cli():
         log_content = log_data.replace("\n", "<br />")
 
         # Send email summary
-        click.echo("Sending email summary", nl=False)
-        if new_participants_success_count != len(new_participants):
-            added_participant_str = f"<strong>{new_participants_success_count}/{len(new_participants)}</strong>"
-        else:
-            added_participant_str = (
-                f"{len(new_participants)}" if len(new_participants) > 0 else None
-            )
-        if len(new_responses) == 0:
-            updated_record_str = None
-        else:
-            if rc_response_r["count"] != len(
-                new_responses
-            ):  # rc_response_r exists if new_responses > 0
-                updated_record_str = (
-                    f"<strong>{rc_response_r['count']}/{len(new_responses)}</strong>"
-                )
+        if mailto is not None:
+            click.echo("Sending email summary", nl=False)
+            if new_participants_success_count != len(new_participants):
+                added_participant_str = f"<strong>{new_participants_success_count}/{len(new_participants)}</strong>"
             else:
-                updated_record_str = f"{len(new_responses)}"
-
-        if (
-            not added_participant_str
-            and not updated_record_str
-            and error_count == 0
-            and warning_count == 0
-        ):
-            click.echo(" - SKIPPED: No changes detected.")
-            return
-
-        if not added_participant_str and not updated_record_str:
-            change_list = None
-        else:
-            change_list = f"""
+                added_participant_str = (
+                    f"{len(new_participants)}" if len(new_participants) > 0 else None
+                )
+            if len(new_responses) == 0:
+                updated_record_str = None
+            else:
+                if rc_response_r["count"] != len(
+                        new_responses
+                ):  # rc_response_r exists if new_responses > 0
+                    updated_record_str = (
+                        f"<strong>{rc_response_r['count']}/{len(new_responses)}</strong>"
+                    )
+                else:
+                    updated_record_str = f"{len(new_responses)}"
+    
+            if (
+                    not added_participant_str
+                    and not updated_record_str
+                    and error_count == 0
+                    and warning_count == 0
+            ):
+                click.echo(" - SKIPPED: No changes detected.")
+                return
+    
+            if not added_participant_str and not updated_record_str:
+                change_list = None
+            else:
+                change_list = f"""
 <h2>Changes</h2>
     <ul>
         {f'< li > New Participants: {added_participant_str}</li>' if added_participant_str else ""}
         {f'< li > New Responses: {updated_record_str}</li>' if updated_record_str else ""}
     </ul>
 </h2>
-            """
+                """
 
-        email_html = f"""
+            email_html = f"""
 <html>
 <body>
 <h1>True Colours -> REDCap Data Comparison Summary</h1>
@@ -191,24 +280,24 @@ def cli():
 </h2>
 </body>
 </html>
-    """
+        """
 
-        url = f"https://api.mailgun.net/v3/{mailgun_domain}/messages"
-
-        data = {
-            "from": f"TRD CLI <mailgun@{mailgun_domain}>",
-            "to": mailto_address,
-            "subject": "TRD CLI Summary",
-            "html": email_html,
-        }
-
-        headers = {"Content-Type": "multipart/form-data"}
-
-        response = requests.post(
-            url, data=data, headers=headers, auth=(mailgun_username, mailgun_secret)
-        )
-        response.raise_for_status()
-        click.echo(" - OK")
+            url = f"https://api.mailgun.net/v3/{mg_domain}/messages"
+    
+            data = {
+                "from": f"TRD CLI <mailgun@{mg_domain}>",
+                "to": mailto,
+                "subject": f"TRD CLI Summary{' [DRY RUN]' if dry_run else ''}",
+                "html": email_html,
+            }
+    
+            headers = {"Content-Type": "multipart/form-data"}
+    
+            response = requests.post(
+                url, data=data, headers=headers, auth=(mg_username, mg_secret)
+            )
+            response.raise_for_status()
+            click.echo(" - OK")
 
     except Exception as e:
         click.echo(" - ERROR")
@@ -219,16 +308,16 @@ def cli():
 
 # Allow dumping the REDCap structure to a given file
 @click.command()
-@click.option(
-    "--output",
-    "-o",
-    default="redcap_structure.txt",
-    help="Output file to dump the REDCap structure to.",
+@click.argument(
+    "output",
+    required=False,
     type=click.Path(dir_okay=False, writable=True, resolve_path=True)
 )
-def export_redcap_structure(output):
+def dump(output):
     """
-    Export the required REDCap structure to a file so that REDCap can be correctly configured for the project.
+    Export the required REDCap structure so that REDCap can be correctly configured for the project.
+    
+    An argument can be supplied to save the output to a file.
     """
     dump_redcap_structure(output)
 
