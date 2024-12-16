@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from time import sleep
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 
 from trd_cli.conversions import (
     extract_participant_info,
@@ -105,6 +105,7 @@ class ConversionsTest(TestCase):
                 with self.subTest(q_name=q_code):
                     self.fail(f"Did not find a {q_code} row to test in data.")
 
+    @skip("Not implemented")
     def test_convert_display_values(self):
         raise NotImplementedError
 
