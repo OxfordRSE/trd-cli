@@ -19,6 +19,8 @@ setup(
         "pytest-cov",
         "codecov",
         "PyCap",
+        "typing_extensions",
+        "setuptools",
     ],
     entry_points={
         "console_scripts": [
