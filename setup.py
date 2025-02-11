@@ -18,7 +18,7 @@ setup(
         "pytest",
         "pytest-cov",
         "codecov",
-        "redcap",
+        "PyCap",
     ],
     entry_points={
         "console_scripts": [
