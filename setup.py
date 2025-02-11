@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trd-cli",
-    version="0.1.0",
+    version="0.1.1",
     description="Treatment Resistant Depression Database Command Line Interface",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -18,6 +18,7 @@ setup(
         "pytest",
         "pytest-cov",
         "codecov",
+        "redcap",
     ],
     entry_points={
         "console_scripts": [
