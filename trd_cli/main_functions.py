@@ -67,7 +67,7 @@ def get_true_colours_data(tc_dir: str) -> dict:
     tmp_dir = ".run"
     os.makedirs(tmp_dir, exist_ok=True)
     # unzip the archive
-    subprocess.run(f"unzip {tc_dir} -d {tmp_dir}", check=True)
+    subprocess.run(f"unzip -o {tc_dir} -d {tmp_dir}", check=True)
     # We now have a directory of csv files (actually pipe-separated) we can load as a dict
     tc_data = parse_tc(tc_dir)
     # Clean up
