@@ -153,9 +153,7 @@ def run(
             fields=[
                 "study_id",
                 "id",
-                "redcap_repeat_instrument",
-                "redcap_repeat_instance",
-                *[f"{n}_record_id" for n in [q["code"] for q in QUESTIONNAIRES]],
+                *[f"{n}_response_id" for n in [q["code"] for q in QUESTIONNAIRES]],
             ]
         )
         redcap_data = extract_redcap_ids(redcap_records)

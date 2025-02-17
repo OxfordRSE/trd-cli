@@ -1,7 +1,7 @@
 import csv
 from datetime import datetime
 from time import sleep
-from unittest import TestCase, main, skip
+from unittest import TestCase, main
 
 from trd_cli.conversions import (
     extract_participant_info,
@@ -104,10 +104,6 @@ class ConversionsTest(TestCase):
             if q_code not in done:
                 with self.subTest(q_name=q_code):
                     self.fail(f"Did not find a {q_code} row to test in data.")
-
-    @skip("Not implemented")
-    def test_convert_display_values(self):
-        raise NotImplementedError
 
     def test_extract_info(self):
         qr_file = "fixtures/patient.csv"

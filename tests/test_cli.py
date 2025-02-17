@@ -159,7 +159,7 @@ class CliTest(TestCase):
                     "id": qr["patientid"],
                     "redcap_repeat_instrument": q, 
                     "redcap_repeat_instance": 1, 
-                    **{f"{q}_record_id": "" for q in qq},
+                    **{f"{q}_response_id": "" for q in qq},
                     f"{q}_response_id": qr["id"]
                 }
                 out_data.append(out)
