@@ -200,9 +200,9 @@ def run(
                     else:
                         r["study_id"] = id_map[p_id]
                 patched_responses.append(r)
-                # Sort patched_responses by study_id so we obey REDCap's sequential ordering in the request
-                patched_responses = sorted(patched_responses, key=lambda x: x["study_id"])
-                LOGGER.debug(f"New responses:\n {json.dumps(patched_responses, indent=4)}")
+            # Sort patched_responses by study_id so we obey REDCap's sequential ordering in the request
+            patched_responses = sorted(patched_responses, key=lambda x: x["study_id"])
+            LOGGER.debug(f"New responses:\n {json.dumps(patched_responses, indent=4)}")
             if not dry_run:
                 rc_response_r = redcap_project.import_records(patched_responses)
                 if rc_response_r["count"] != len(new_responses):

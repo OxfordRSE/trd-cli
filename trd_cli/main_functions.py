@@ -117,14 +117,14 @@ def compare_tc_to_rc(tc_data: dict, redcap_id_data: List[dict]) -> Tuple[list, l
             private, public = extract_participant_info(p)
             new_responses.append(
                 {
-                    "study_id": redcap_id_data[p_id]["study_id"] if p_id in redcap_id_data else f"__NEW__{p_id}",
+                    "study_id": f"__NEW__{p_id}" if is_new else redcap_id_data[p_id]["study_id"],
                     **private,
                     "redcap_repeat_instrument": "private",
                     "redcap_repeat_instance": 1 if is_new else len(redcap_id_data[p.get("id")]["private"]) + 1,
                 })
             new_responses.append(
                 {
-                    "study_id": redcap_id_data[p_id]["study_id"] if p_id in redcap_id_data else f"__NEW__{p_id}",
+                    "study_id": f"__NEW__{p_id}" if is_new else redcap_id_data[p_id]["study_id"],
                     **public,
                     "redcap_repeat_instrument": "info",
                     "redcap_repeat_instance": 1 if is_new else len(redcap_id_data[p.get("id")]["info"]) + 1,
