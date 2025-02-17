@@ -183,7 +183,7 @@ def run(
             LOGGER.info(
                 f"Generating record names for {len(new_participants)} new participants: {', '.join(new_participants)}."
             )
-            record_names_start_at = redcap_project.generate_next_record_name()
+            record_names_start_at = int(redcap_project.generate_next_record_name())
             for i, p_id in enumerate(new_participants):
                 try:
                     new_id = record_names_start_at + i
