@@ -102,8 +102,8 @@ class CliTest(TestCase):
         self.requests_post_mock.assert_called_once()
 
         email_html = self.requests_post_mock.call_args[1]["data"]["html"]
-        self.assertIn("New Participants: 2", email_html)
-        self.assertIn("New Responses: 1", email_html)
+        self.assertIn("(2 new)", email_html)
+        self.assertIn("1 new responses", email_html)
         self.assertIn("Log File (0 Errors, 0 Warnings)", email_html)
         self.assertIn(" INFO ", email_html)
 
@@ -138,7 +138,7 @@ class CliTest(TestCase):
             while True:
                 i += 1
                 yield str(i)
-        self.redcap_project_mock.return_value.generate_next_record_name.side_effect = lambda: mock_next_record()
+        self.redcap_project_mock.return_value.generate_next_record_name.side_effect = mock_next_record()
 
         def load_tc_data(f):
             with open(f, "r") as f:
@@ -205,7 +205,8 @@ class CliTest(TestCase):
         result = runner.invoke(run)
 
         self.assertEqual(result.exit_code, 0, result.output)
-        self.assertIn("4 new participants; 11 new responses.", result.output)
+        self.assertIn("11 new responses", result.output)
+        self.assertIn("4 participants (4 new)", result.output)
 
         self.subTest("Second upload")
         self.parse_tc_mock.side_effect = lambda _: load_tc_data("fixtures/tc_data.json")

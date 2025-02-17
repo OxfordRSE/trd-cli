@@ -176,7 +176,7 @@ def run(
         LOGGER.debug(f"New participants:\n {json.dumps(new_participants, indent=4)}")
         LOGGER.debug(f"New responses:\n {len(new_responses)}")
         failed_pids = []
-        failed_record_count = 0
+        unique_ids = set()
 
         id_map = {}
         if len(new_participants) > 0:
@@ -205,32 +205,33 @@ def run(
             # Sort patched_responses by study_id so we obey REDCap's sequential ordering in the request
             patched_responses = sorted(patched_responses, key=lambda x: x["study_id"])
             LOGGER.debug(f"New responses:\n {json.dumps(patched_responses, indent=4)}")
+            unique_ids = set([x["study_id"] for x in patched_responses])
             if not dry_run:
-                rc_response_r = redcap_project.import_records(patched_responses)
-                if rc_response_r["count"] != len(new_responses):
+                rc_response_r = redcap_project.import_records(patched_responses, return_content="ids")
+                if len(rc_response_r) != len(unique_ids):
+                    failed_pids = list(unique_ids - set(rc_response_r))
                     LOGGER.error(
                         (
                             f"Failed to import new questionnaire responses. "
-                            f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
+                            f"Failed for {len(failed_pids)}, succeeded for {len(rc_response_r)}."
                         )
                     )
-                    failed_record_count = len(new_responses) - rc_response_r["count"]
+                    LOGGER.error(f"Failed study_ids: {json.dumps(failed_pids, indent=4)}")
                 else:
                     LOGGER.info(
                         (
-                            f"Added {len(new_responses)} new questionnaire responses: "
+                            f"Added {len(new_responses)} new questionnaire "
+                            f"responses for {len(unique_ids)} participants: "
                             f"{', '.join([get_response_id_from_response_data(x) for x in new_responses])}."
                         )
                     )
 
         click.echo(" - OK")
         click.echo(
-            f"\t{len(new_participants)} new participants; {len(new_responses)} new responses."
+            f"\t{len(new_responses)} new responses for {len(unique_ids)} participants ({len(new_participants)} new)."
         )
         if len(failed_pids) > 0:
-            click.echo(f"\t{len(failed_pids)} participants failed to import: {failed_pids}.", err=True)
-        if failed_record_count > 0:
-            click.echo(f"\t{failed_record_count} responses failed to import.", err=True)
+            click.echo(f"\tImport failed for {len(failed_pids)} participants: {failed_pids}.", err=True)
 
         # Scan logs and count errors and warnings
         with open(log_file, "r") as f:
@@ -242,40 +243,30 @@ def run(
         # Send email summary
         if mailto is not None:
             click.echo("Sending email summary", nl=False)
-            if len(failed_pids) > 0:
-                added_participant_str = f"<strong>{len(new_participants) - len(failed_pids)}/{len(new_participants)}</strong>"
-            else:
-                added_participant_str = (
-                    f"{len(new_participants)}" if len(new_participants) > 0 else None
-                )
-            if len(new_responses) == 0:
-                updated_record_str = None
-            else:
-                if failed_record_count > 0: 
-                    updated_record_str = (
-                        f"<strong>{rc_response_r['count']}/{len(new_responses)}</strong>"
-                    )
-                else:
-                    updated_record_str = f"{len(new_responses)}"
     
             if (
-                    not added_participant_str
-                    and not updated_record_str
+                    len(new_responses) == 0
                     and error_count == 0
                     and warning_count == 0
             ):
                 click.echo(" - SKIPPED: No changes detected.")
                 return
     
-            if not added_participant_str and not updated_record_str:
+            if len(new_participants) == 0 and len(new_responses) == 0:
                 change_list = None
             else:
+                if len(failed_pids) > 0:
+                    failed_str = (
+                        f"Import failed for {len(failed_pids)} participants: {json.dumps(failed_pids, indent=4)}."
+                    )
+                else: 
+                    failed_str = ""
                 change_list = f"""
 <h2>Changes</h2>
-    <ul>
-        {f'< li > New Participants: {added_participant_str}</li>' if added_participant_str else ""}
-        {f'< li > New Responses: {updated_record_str}</li>' if updated_record_str else ""}
-    </ul>
+    <p>
+        {len(new_responses)} new responses added for {len(unique_ids)} participants ({len(new_participants)} new).
+        {failed_str}
+    </p>
 </h2>
                 """
 
