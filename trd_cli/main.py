@@ -159,7 +159,8 @@ def run(
             ]
         )
         LOGGER.debug(f"Downloaded {len(redcap_records)} records from REDCap.")
-        LOGGER.debug(f"First record: {redcap_records[0]}")
+        if len(redcap_records) > 0:
+            LOGGER.debug(f"First record: {redcap_records[0]}")
         redcap_data = extract_redcap_ids(redcap_records)
         LOGGER.debug(f"Extracted REDCap records:\n {json.dumps(redcap_data, indent=4)}")
         click.echo(" - OK")
