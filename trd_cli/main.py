@@ -7,7 +7,8 @@ import click
 import requests
 
 from trd_cli.questionnaires import QUESTIONNAIRES, dump_redcap_structure
-from trd_cli.main_functions import extract_redcap_ids, get_true_colours_data, compare_tc_to_rc
+from trd_cli.main_functions import extract_redcap_ids, get_true_colours_data, compare_tc_to_rc, \
+    get_response_id_from_response_data
 
 # Construct a logger that saves logged events to a dictionary that we can attach to an email later
 import logging
@@ -209,7 +210,7 @@ def run(
                     LOGGER.info(
                         (
                             f"Added {len(new_responses)} new questionnaire responses: "
-                            f"{', '.join([x[f'''{x['redcap_repeat_instrument']}_response_id'''] for x in new_responses])}."
+                            f"{', '.join([get_response_id_from_response_data(x) for x in new_responses])}."
                         )
                     )
 

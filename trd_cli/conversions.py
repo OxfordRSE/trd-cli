@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal, Tuple, List, Callable
+from typing import Literal, Tuple, List, Callable, Optional
 
 from typing_extensions import TypedDict
 
@@ -25,6 +25,7 @@ class QuestionnaireMetadata(TypedDict):
     items: List[str]  # QuestionShortName in TrueColours data
     scores: List[str]  # Name in TrueColours data
     conversion_fn: Callable[["QuestionnaireMetadata", dict], dict]
+    repeat_instrument: Optional[bool]
 
 
 def convert_consent(_q: QuestionnaireMetadata, questionnaire_data: dict) -> dict:

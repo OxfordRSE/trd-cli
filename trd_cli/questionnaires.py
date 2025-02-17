@@ -3,6 +3,9 @@ from typing import List, Dict, Union
 from trd_cli.conversions import QuestionnaireMetadata, convert_scores, convert_display_values, convert_consent, \
     RCRecordMetadata, extract_participant_info
 
+# List of questionnaires with their metadata
+# Each questionnaire has a name, code, list of items, list of scores, and a conversion function
+# Questionnaires may have a "repeat_instrument" field to indicate whether they are repeated (default is True)
 QUESTIONNAIRES: List[QuestionnaireMetadata] = [
     {
         "name": "Anxiety (GAD-7)",
@@ -199,6 +202,7 @@ QUESTIONNAIRES: List[QuestionnaireMetadata] = [
         "items": [],
         "scores": [],
         "conversion_fn": convert_consent,
+        "repeat_instrument": False,
     },
     {
         "name": "Positive Valence Systems Scale, 21 items (PVSS-21)",
@@ -403,8 +407,8 @@ def dump_redcap_structure(filename: Union[str, None]):
             f.write("\n".join(lines))
 
 
-def get_code_by_name(name: str) -> Union[str, None]:
-    qs = [q["code"] for q in QUESTIONNAIRES if q["name"] == name]
+def get_questionnaire_by_name(name: str) -> Union[QuestionnaireMetadata, None]:
+    qs = [q for q in QUESTIONNAIRES if q["name"] == name]
     if len(qs) == 0:
         return None
     return qs[0]

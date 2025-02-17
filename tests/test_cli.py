@@ -41,9 +41,9 @@ class CliTest(TestCase):
             mock.patch("trd_cli.main_functions.parse_tc", autospec=True)
         )
         self.mock_compare_return = (
-                    {'1255217154': {'info': {'info_birthyear_int': '1949', 'info_datetime': '2024-11-11T15:59:57.221799', 'info_is_test_bool': False, 'info_deceased_datetime': '', 'info_gender_int': '1', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '1949-11-04', 'contactemail': 'b.tester@example.com', 'datetime': '2024-11-11T15:59:57.221799', 'firstname': 'Besty', 'id': '1255217154', 'lastname': 'Tester', 'mobilenumber': '+44 7000 000000', 'nhsnumber': '9910362813', 'preferredcontact': '0'}}, '1975714028': {'info': {'info_birthyear_int': '2018', 'info_datetime': '2024-11-11T15:59:57.221846', 'info_deceased_datetime': '', 'info_gender_int': '0', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '2018-08-02', 'contactemail': 'jde-test1@avcosystems.com', 'datetime': '2024-11-11T15:59:57.221846', 'firstname': 'Jamie', 'id': '1975714028', 'lastname': 'Emery', 'mobilenumber': '', 'nhsnumber': '4389162012', 'preferredcontact': '0'}}},
-                    [{'redcap_repeat_instance': 1, 'redcap_repeat_instrument': 'phq9', 'study_id': '__NEW__1255217154', "phq9_response_id": "123423"}]
-                )
+            {'1255217154': {'info': {'info_birthyear_int': '1949', 'info_datetime': '2024-11-11T15:59:57.221799', 'info_is_test_bool': False, 'info_deceased_datetime': '', 'info_gender_int': '1', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '1949-11-04', 'contactemail': 'b.tester@example.com', 'datetime': '2024-11-11T15:59:57.221799', 'firstname': 'Besty', 'id': '1255217154', 'lastname': 'Tester', 'mobilenumber': '+44 7000 000000', 'nhsnumber': '9910362813', 'preferredcontact': '0'}}, '1975714028': {'info': {'info_birthyear_int': '2018', 'info_datetime': '2024-11-11T15:59:57.221846', 'info_deceased_datetime': '', 'info_gender_int': '0', 'info_is_deceased_bool': ''}, 'private': {'birthdate': '2018-08-02', 'contactemail': 'jde-test1@avcosystems.com', 'datetime': '2024-11-11T15:59:57.221846', 'firstname': 'Jamie', 'id': '1975714028', 'lastname': 'Emery', 'mobilenumber': '', 'nhsnumber': '4389162012', 'preferredcontact': '0'}}},
+            [{'redcap_repeat_instance': 1, 'redcap_repeat_instrument': 'phq9', 'study_id': '__NEW__1255217154', "phq9_response_id": "123423"}]
+        )
         self.compare_data_mock = self.enterContext(
             mock.patch(
                 "trd_cli.main.compare_tc_to_rc",
@@ -54,14 +54,14 @@ class CliTest(TestCase):
         self.requests_post_mock = self.enterContext(
             mock.patch("requests.post", autospec=True)
         )
-        
+
         def load_tc_data_side_effect(*_args, **_kwargs):
             with open("fixtures/tc_data.json", "r") as f:
                 return json.load(f)
 
         # Mocking the parse_tc function to return the data from fixtures/tc_data.json
         self.parse_tc_mock.side_effect = load_tc_data_side_effect
-        
+
         def export_records_side_effect(*_args, **_kwargs):
             with open("fixtures/redcap_export.json", "r") as f:
                 return json.load(f)
@@ -123,15 +123,15 @@ class CliTest(TestCase):
 
         self.assertNotEqual(result.exit_code, 0)
         self.assertIn("Sending email summary - ERROR", result.output)
-    
+
     def test_double_upload(self):
         """
         - Parse a True Colours export versus a blank REDCap export.
         - Parse an updated True Colours export versus the previous REDCap export.
         """
-        
+
         # We need to use the real compare for this to be a useful test
-        self.compare_data_mock.side_effect = compare_tc_to_rc  
+        self.compare_data_mock.side_effect = compare_tc_to_rc
 
         def mock_next_record():
             i = 200  # the redcap_from_tc function below uses the 101-199 range for study_ids
@@ -139,11 +139,11 @@ class CliTest(TestCase):
                 i += 1
                 yield str(i)
         self.redcap_project_mock.return_value.generate_next_record_name.side_effect = lambda: mock_next_record()
-        
+
         def load_tc_data(f):
             with open(f, "r") as f:
                 return json.load(f)
-            
+
         def redcap_from_tc(tc_data: dict) -> List[dict]:
             out_data = []
             participant_id_map = {
@@ -154,11 +154,16 @@ class CliTest(TestCase):
                 if qr["responses"] is None:
                     continue
                 q = [q["code"] for q in QUESTIONNAIRES if q["name"] == qr["interoperability"]["title"]][0]
+                repeats = [x.get("repeat_instrument", True) for x in QUESTIONNAIRES if x["code"] == q][0]
                 out = {
-                    "study_id": participant_id_map[qr["patientid"]], 
+                    "study_id": participant_id_map[qr["patientid"]],
                     "id": qr["patientid"],
-                    "redcap_repeat_instrument": q, 
-                    "redcap_repeat_instance": 1, 
+                    **(
+                        {
+                            "redcap_repeat_instrument": q,
+                            "redcap_repeat_instance": 1,
+                        } if repeats else {}
+                    ),
                     **{f"{q}_response_id": "" for q in qq},
                     f"{q}_response_id": qr["id"]
                 }
@@ -168,22 +173,22 @@ class CliTest(TestCase):
         initial_data = load_tc_data("fixtures/tc_data_initial.json")
 
         self.subTest("Initial upload")
-        self.parse_tc_mock.side_effect = lambda _: initial_data 
+        self.parse_tc_mock.side_effect = lambda _: initial_data
         self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: list()
-        
+
         runner = CliRunner()
         result = runner.invoke(run)
 
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertIn("4 new participants; 3 new responses.", result.output)
-        
+
         self.subTest("Second upload")
         self.parse_tc_mock.side_effect = lambda _: load_tc_data("fixtures/tc_data.json")
         self.redcap_project_mock.return_value.export_records.side_effect = lambda *_, **_k: redcap_from_tc(initial_data)
 
         runner = CliRunner()
         result = runner.invoke(run)
-        
+
         self.assertEqual(result.exit_code, 0, result.output)
 
     def test_export_redcap_structure(self):
@@ -195,7 +200,7 @@ class CliTest(TestCase):
 
         self.assertEqual(result.exit_code, 0, result.output)
         self.assertTrue(os.path.exists("./.redcap_structure.txt"))
-    
+
 
 if __name__ == "__main__":
     main()
