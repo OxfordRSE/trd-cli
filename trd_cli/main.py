@@ -119,7 +119,7 @@ def run(
         log_file = os.path.join(log_dir, f"trd_cli-{datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')}.log")
         dictConfig(get_config(log_file))
         LOGGER.setLevel(log_level)
-        
+
         click.echo("Running TRD CLI")
 
         # Verify that all environment variables are set
@@ -218,11 +218,17 @@ def run(
                     )
                     LOGGER.error(f"Failed study_ids: {json.dumps(failed_pids, indent=4)}")
                 else:
+                    pid_qid_map = {
+                        study_id: [
+                            get_response_id_from_response_data(x) for x in patched_responses if
+                            x["study_id"] == study_id
+                        ] for study_id in unique_ids
+                    }
                     LOGGER.info(
                         (
                             f"Added {len(new_responses)} new questionnaire "
                             f"responses for {len(unique_ids)} participants: "
-                            f"{', '.join([get_response_id_from_response_data(x) for x in new_responses])}."
+                            f"{json.dumps(pid_qid_map, indent=4)}."
                         )
                     )
 
@@ -243,7 +249,7 @@ def run(
         # Send email summary
         if mailto is not None:
             click.echo("Sending email summary", nl=False)
-    
+
             if (
                     len(new_responses) == 0
                     and error_count == 0
@@ -251,7 +257,7 @@ def run(
             ):
                 click.echo(" - SKIPPED: No changes detected.")
                 return
-    
+
             if len(new_participants) == 0 and len(new_responses) == 0:
                 change_list = None
             else:
@@ -259,7 +265,7 @@ def run(
                     failed_str = (
                         f"Import failed for {len(failed_pids)} participants: {json.dumps(failed_pids, indent=4)}."
                     )
-                else: 
+                else:
                     failed_str = ""
                 change_list = f"""
 <h2>Changes</h2>
@@ -286,16 +292,16 @@ def run(
         """
 
             url = f"https://api.mailgun.net/v3/{mg_domain}/messages"
-    
+
             data = {
                 "from": f"TRD CLI <mailgun@{mg_domain}>",
                 "to": mailto,
                 "subject": f"TRD CLI Summary{' [DRY RUN]' if dry_run else ''}",
                 "html": email_html,
             }
-    
+
             headers = {"Content-Type": "multipart/form-data"}
-    
+
             response = requests.post(
                 url, data=data, headers=headers, auth=(mg_username, mg_secret)
             )
