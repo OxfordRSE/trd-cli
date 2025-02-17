@@ -86,7 +86,8 @@ class ConversionsTest(TestCase):
             interop = r.get("interoperability")
             if interop is not None:
                 q_title = interop.get("title")
-                q_code = get_questionnaire_by_name(q_title).get("code")
+                version = r.get('version')
+                q_code = get_questionnaire_by_name(q_title, version).get("code")
                 if q_code is not None and q_code not in done:
                     with self.subTest(q_name=q_code):
                         done.append(q_code)

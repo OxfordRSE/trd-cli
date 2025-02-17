@@ -142,7 +142,8 @@ def compare_tc_to_rc(tc_data: dict, redcap_id_data: List[dict]) -> Tuple[list, l
             )
             continue
         q_name = interop.get("title")
-        questionnaire = get_questionnaire_by_name(q_name)
+        version = qr.get('version')
+        questionnaire = get_questionnaire_by_name(q_name, version)
         if questionnaire is None:
             LOGGER.warning(
                 f"Questionnaire response id={q_id} has unrecognised title {q_name}."

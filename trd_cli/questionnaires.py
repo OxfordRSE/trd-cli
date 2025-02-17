@@ -8,7 +8,6 @@ from trd_cli.conversions import QuestionnaireMetadata, convert_scores, convert_d
 # and a `conversion_fn` to convert to a REDCap record.
 # They may also optionally have:
 # - A `repeat_instrument` field to indicate whether they are repeated (default True)
-# - A `participant_data` field to indicate whether they are special-case records (default False)
 QUESTIONNAIRES: List[QuestionnaireMetadata] = [
     {
         "name": "Anxiety (GAD-7)",
@@ -411,8 +410,12 @@ def dump_redcap_structure(filename: Union[str, None]):
             f.write("\n".join(lines))
 
 
-def get_questionnaire_by_name(name: str) -> Union[QuestionnaireMetadata, None]:
+def get_questionnaire_by_name(name: str, version: Union[int, None]) -> Union[QuestionnaireMetadata, None]:
+    if version == '1':
+        version = None
     qs = [q for q in QUESTIONNAIRES if q["name"] == name]
+    if version is not None:
+        qs = [q for q in qs if f"_v{version}" in q.get("code")]
     if len(qs) == 0:
         return None
     return qs[0]

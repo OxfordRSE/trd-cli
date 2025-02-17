@@ -220,8 +220,10 @@ def run(
                 else:
                     pid_qid_map = {
                         study_id: [
-                            f"TC id: {get_response_id_from_response_data(x)} -> {x.get('redcap_repeat_instrument')}" 
-                            for x in patched_responses if x["study_id"] == study_id
+                            (
+                                f"TC id: {get_response_id_from_response_data(x)} -> "
+                                f"{x.get('redcap_repeat_instrument', 'consent')}"
+                            ) for x in patched_responses if x["study_id"] == study_id
                         ] for study_id in unique_ids
                     }
                     LOGGER.info(
