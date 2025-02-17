@@ -11,40 +11,44 @@ class RedcapExtractionTest(TestCase):
             records = json.load(f)
         self.assertEqual(
             {
-                "one-oh-one": {
+                'one-oh-one': {
                     'aq10': [],
                     'asrs': [],
                     'audit': [],
                     'brss': [],
-                    "consent": [],
-                    "demo": [],
+                    'consent': [],
+                    'demo': [],
                     'dudit': [],
-                    "gad7": [("2222222", 1)],
-                    "mania": [],
-                    "phq9": [("1111111", 1), ("121212", 1)],
+                    'gad7': [('2222222', 1)],
+                    'info': [],
+                    'mania': [],
+                    'phq9': [('1111111', 1), ('121212', 1)],
+                    'private': [('2024-11-04 12:59:24.973', 1)],
                     'pvss': [],
-                    "reqol10": [],
+                    'reqol10': [],
                     'sapas': [],
-                    "study_id": "101",
-                    "wsas": [],
+                    'study_id': '101',
+                    'wsas': []
                 },
-                "one-oh-two": {
+                'one-oh-two': {
                     'aq10': [],
                     'asrs': [],
                     'audit': [],
                     'brss': [],
-                    "consent": [],
-                    "demo": [],
+                    'consent': [],
+                    'demo': [],
                     'dudit': [],
-                    "gad7": [("1231241", 1)],
-                    "mania": [],
-                    "phq9": [],
+                    'gad7': [('1231241', 1)],
+                    'info': [],
+                    'mania': [],
+                    'phq9': [],
+                    'private': [('2024-11-04 12:59:24.973', 1)],
                     'pvss': [],
-                    "reqol10": [],
+                    'reqol10': [],
                     'sapas': [],
-                    "study_id": "102",
-                    "wsas": [],
-                },
+                    'study_id': '102',
+                    'wsas': []
+                }
             },
             extract_redcap_ids(records),
         )
@@ -93,10 +97,9 @@ class CompareDataTest(TestCase):
         }
         p, r = compare_tc_to_rc(tc_data, self.rc_data)
         self.assertEqual(len(p), 2)
-        self.assertEqual(len(r), 1)
-        for p_id, p_data in p.items():
+        self.assertEqual(len(r), 5)
+        for p_id in p:
             self.assertEqual(p_id, self.tc_data["patient.csv"][0]["id"])
-            self.assertEqual(len(p_data), 2)
             break
         self.assertTrue(r[0]["study_id"].startswith("__NEW__"))
 
@@ -107,7 +110,7 @@ class CompareDataTest(TestCase):
         }
         p, r = compare_tc_to_rc(tc_data, self.rc_data)
         self.assertEqual(len(p), 2)
-        self.assertEqual(len(r), 0)
+        self.assertEqual(len(r), 4)
 
     def test_existing_patient(self):
         rc_data = {

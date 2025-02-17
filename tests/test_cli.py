@@ -149,6 +149,23 @@ class CliTest(TestCase):
             participant_id_map = {
                 p["id"]: i + 101 for i, p in enumerate(tc_data["patient.csv"])
             }
+            # private and info
+            for p in tc_data["patient.csv"]:
+                out_data.append({
+                    "study_id": participant_id_map[p["id"]],
+                    "id": p["id"],
+                    "redcap_repeat_instrument": "private",
+                    "redcap_repeat_instance": 1,
+                    "updated": p["updated"],
+                })
+                out_data.append({
+                    "study_id": participant_id_map[p["id"]],
+                    "id": p["id"],
+                    "redcap_repeat_instrument": "info",
+                    "redcap_repeat_instance": 1,
+                    "info_updated_datetime": p["updated"],
+                })
+                
             qq = [q["code"] for q in QUESTIONNAIRES]
             for qr in tc_data["questionnaireresponse.csv"]:
                 if qr["responses"] is None:
@@ -168,6 +185,14 @@ class CliTest(TestCase):
                     f"{q}_response_id": qr["id"]
                 }
                 out_data.append(out)
+            # Add all the fields to all the records
+            field_list = set()
+            for record in out_data:
+                field_list.update(record.keys())
+            for record in out_data:
+                for field in field_list:
+                    if field not in record:
+                        record[field] = ""
             return out_data
 
         initial_data = load_tc_data("fixtures/tc_data_initial.json")
@@ -180,7 +205,7 @@ class CliTest(TestCase):
         result = runner.invoke(run)
 
         self.assertEqual(result.exit_code, 0, result.output)
-        self.assertIn("4 new participants; 3 new responses.", result.output)
+        self.assertIn("4 new participants; 11 new responses.", result.output)
 
         self.subTest("Second upload")
         self.parse_tc_mock.side_effect = lambda _: load_tc_data("fixtures/tc_data.json")

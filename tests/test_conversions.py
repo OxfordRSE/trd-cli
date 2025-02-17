@@ -127,6 +127,7 @@ class ConversionsTest(TestCase):
                 "mobilenumber": "+44 7000 000000",
                 "nhsnumber": "9910362813",
                 "preferredcontact": "0",
+                "updated": "2024-11-04 12:59:24.973",
             },
             private,
         )
@@ -137,7 +138,8 @@ class ConversionsTest(TestCase):
                 "info_deceased_datetime": "",
                 "info_gender_int": "1",
                 "info_is_deceased_bool": "",
-                'info_is_test_bool': False,
+                "info_is_test_bool": False,
+                "info_updated_datetime": "2024-11-04 12:59:24.973",
             },
             public,
         )

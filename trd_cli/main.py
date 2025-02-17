@@ -155,6 +155,8 @@ def run(
             fields=[
                 "study_id",
                 "id",
+                "updated",
+                "info_updated_datetime",
                 *[f"{n}_response_id" for n in [q["code"] for q in QUESTIONNAIRES]],
             ]
         )
@@ -173,24 +175,18 @@ def run(
         )
         LOGGER.debug(f"New participants:\n {json.dumps(new_participants, indent=4)}")
         LOGGER.debug(f"New responses:\n {json.dumps(new_responses, indent=4)}")
-        new_participants_success_count = 0
+        failed_pids = []
+        failed_record_count = 0
 
         id_map = {}
         if len(new_participants) > 0:
             LOGGER.info(
-                f"Added {len(new_participants)} new records: {', '.join(new_participants)}."
+                f"Generating record names for {len(new_participants)} new participants: {', '.join(new_participants)}."
             )
-            for p_id, data in new_participants.items():
+            for p_id in new_participants:
                 try:
                     new_id = redcap_project.generate_next_record_name()
                     id_map[p_id] = new_id
-                    if not dry_run:
-                        rc_response = redcap_project.import_records([
-                            {"study_id": new_id, **data["private"]},
-                            {"study_id": new_id, **data["info"]},
-                        ])
-                        assert rc_response["count"] == 2, f"Failed to import record for {p_id}."
-                    new_participants_success_count += 1
                 except Exception as e:
                     LOGGER.exception(e)
 
@@ -213,6 +209,7 @@ def run(
                             f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
                         )
                     )
+                    failed_record_count = len(new_responses) - rc_response_r["count"]
                 else:
                     LOGGER.info(
                         (
@@ -225,6 +222,10 @@ def run(
         click.echo(
             f"\t{len(new_participants)} new participants; {len(new_responses)} new responses."
         )
+        if len(failed_pids) > 0:
+            click.echo(f"\t{len(failed_pids)} participants failed to import: {failed_pids}.", err=True)
+        if failed_record_count > 0:
+            click.echo(f"\t{failed_record_count} responses failed to import.", err=True)
 
         # Scan logs and count errors and warnings
         with open(log_file, "r") as f:
@@ -236,8 +237,8 @@ def run(
         # Send email summary
         if mailto is not None:
             click.echo("Sending email summary", nl=False)
-            if new_participants_success_count != len(new_participants):
-                added_participant_str = f"<strong>{new_participants_success_count}/{len(new_participants)}</strong>"
+            if len(failed_pids) > 0:
+                added_participant_str = f"<strong>{len(new_participants) - len(failed_pids)}/{len(new_participants)}</strong>"
             else:
                 added_participant_str = (
                     f"{len(new_participants)}" if len(new_participants) > 0 else None
@@ -245,9 +246,7 @@ def run(
             if len(new_responses) == 0:
                 updated_record_str = None
             else:
-                if rc_response_r["count"] != len(
-                        new_responses
-                ):  # rc_response_r exists if new_responses > 0
+                if failed_record_count > 0: 
                     updated_record_str = (
                         f"<strong>{rc_response_r['count']}/{len(new_responses)}</strong>"
                     )
@@ -308,7 +307,7 @@ def run(
             click.echo(" - OK")
 
     except Exception as e:
-        click.echo(" - ERROR")
+        click.echo(" - ERROR", err=True)
         LOGGER.exception(e)
         click.echo(f"{e.__class__.__name__}: {e}", err=True)
         exit(1)

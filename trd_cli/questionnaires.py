@@ -3,9 +3,12 @@ from typing import List, Dict, Union
 from trd_cli.conversions import QuestionnaireMetadata, convert_scores, convert_display_values, convert_consent, \
     RCRecordMetadata, extract_participant_info
 
-# List of questionnaires with their metadata
-# Each questionnaire has a name, code, list of items, list of scores, and a conversion function
-# Questionnaires may have a "repeat_instrument" field to indicate whether they are repeated (default is True)
+# List of questionnaires with their metadata corresponding to True Colours questionnaires.
+# Each questionnaire has a name, code, list of items, and a list of scores, 
+# and a `conversion_fn` to convert to a REDCap record.
+# They may also optionally have:
+# - A `repeat_instrument` field to indicate whether they are repeated (default True)
+# - A `participant_data` field to indicate whether they are special-case records (default False)
 QUESTIONNAIRES: List[QuestionnaireMetadata] = [
     {
         "name": "Anxiety (GAD-7)",
@@ -338,7 +341,7 @@ def get_redcap_structure() -> Dict[str, List[str]]:
         "gender": "",
     }
     dump["private"], dump["info"] = extract_participant_info(dummy_participant)
-    
+
     consent_q = list(filter(lambda x: x["code"] == "consent", QUESTIONNAIRES))[0]
     consent_data = {
         "id": "1234567890",
@@ -356,10 +359,11 @@ def get_redcap_structure() -> Dict[str, List[str]]:
     # Consent's penultimate question is a signature that isn't exported 
     consent_data["scores"]["QuestionScores"][-1]["QuestionNumber"] += 1
     dump["consent"] = convert_consent(consent_q, consent_data)
-    
+
     for q in QUESTIONNAIRES:
-        # Special case for 'consent' questionnaire where Q17 is a non-exported signature
-        if q["code"] == "consent":
+        # Special case for 'consent' questionnaire where Q17 is a non-exported signature.
+        # Questionnaires private, info handled above
+        if q["code"] in ["private", "info", "consent"]:
             continue
         # Mock questionnaire data with reference to its declaration
         dummy_questionnaire = {
@@ -379,10 +383,10 @@ def get_redcap_structure() -> Dict[str, List[str]]:
             },
         }
         dump[q["code"]] = q["conversion_fn"](q, dummy_questionnaire)
-    
+
     for k, v in dump.items():
         dump[k] = list(v.keys())
-    
+
     return dump
 
 

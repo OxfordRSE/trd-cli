@@ -120,6 +120,7 @@ def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
         "firstname",
         "lastname",
         "preferredcontact",
+        "updated"
     ]
     now = datetime.now().isoformat()
 
@@ -134,4 +135,6 @@ def extract_participant_info(patient_csv_data: dict) -> Tuple[dict, dict]:
         "info_is_test_bool": is_test_nhs_number(patient_csv_data.get("nhsnumber")),
         "info_is_deceased_bool": patient_csv_data.get("deceasedboolean"),
         "info_deceased_datetime": patient_csv_data.get("deceaseddatetime"),
+        "info_updated_datetime": patient_csv_data.get("updated"),
     }
+
