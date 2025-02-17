@@ -183,12 +183,14 @@ def run(
             LOGGER.info(
                 f"Generating record names for {len(new_participants)} new participants: {', '.join(new_participants)}."
             )
-            for p_id in new_participants:
+            record_names_start_at = redcap_project.generate_next_record_name()
+            for i, p_id in enumerate(new_participants):
                 try:
-                    new_id = redcap_project.generate_next_record_name()
+                    new_id = record_names_start_at + i
                     id_map[p_id] = new_id
                 except Exception as e:
                     LOGGER.exception(e)
+            LOGGER.debug(f"id_map: {json.dumps(id_map, indent=4)}")
 
         if len(new_responses) > 0:
             patched_responses = []
