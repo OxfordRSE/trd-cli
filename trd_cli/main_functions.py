@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 def extract_redcap_ids(records) -> dict:
     """
     Get a list of participants from REDCap.
-    Each one will have a `study_id` (REDCap Id) and `id` our `patient.csv` `id` field.
+    Each one will have a `study_id` (REDCap Id) and `id` (our `patient.csv` `id` field).
     Each one will also have the `_response_id` for each questionnaire recorded in REDCap.
 
     Return a dictionary of `id`: with the `study_id` and the names of each questionnaire containing

@@ -150,6 +150,7 @@ def run(
         # Download data from the REDCap API
         click.echo("Downloading data from REDCap", nl=False)
         redcap_project = Project(rc_url, rc_token)
+        LOGGER.debug(f"Connected to REDCap project {redcap_project}")
         redcap_records = redcap_project.export_records(
             fields=[
                 "study_id",
@@ -157,7 +158,10 @@ def run(
                 *[f"{n}_response_id" for n in [q["code"] for q in QUESTIONNAIRES]],
             ]
         )
+        LOGGER.debug(f"Downloaded {len(redcap_records)} records from REDCap.")
+        LOGGER.debug(f"First record: {redcap_records[0]}")
         redcap_data = extract_redcap_ids(redcap_records)
+        LOGGER.debug(f"Extracted REDCap records:\n {json.dumps(redcap_data, indent=4)}")
         click.echo(" - OK")
 
         # Compare the True Colours data to the REDCap data
@@ -166,6 +170,8 @@ def run(
         new_participants, new_responses = compare_tc_to_rc(
             tc_data=tc_data, redcap_id_data=redcap_data
         )
+        LOGGER.debug(f"New participants:\n {json.dumps(new_participants, indent=4)}")
+        LOGGER.debug(f"New responses:\n {json.dumps(new_responses, indent=4)}")
         new_participants_success_count = 0
 
         id_map = {}
