@@ -174,7 +174,7 @@ def run(
             tc_data=tc_data, redcap_id_data=redcap_data
         )
         LOGGER.debug(f"New participants:\n {json.dumps(new_participants, indent=4)}")
-        LOGGER.debug(f"New responses:\n {json.dumps(new_responses, indent=4)}")
+        LOGGER.debug(f"New responses:\n {len(new_responses)}")
         failed_pids = []
         failed_record_count = 0
 
@@ -200,12 +200,13 @@ def run(
                     else:
                         r["study_id"] = id_map[p_id]
                 patched_responses.append(r)
+                LOGGER.debug(f"New responses:\n {json.dumps(patched_responses, indent=4)}")
             if not dry_run:
                 rc_response_r = redcap_project.import_records(patched_responses)
                 if rc_response_r["count"] != len(new_responses):
                     LOGGER.error(
                         (
-                            f"Failed to import all new questionnaire responses. "
+                            f"Failed to import new questionnaire responses. "
                             f"Tried {len(new_responses)}, succeeded with {rc_response_r.get('count')}"
                         )
                     )
