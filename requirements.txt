@@ -1,6 +1,6 @@
 ## The following requirements were added by pip freeze:
 click==8.1.7
 pycap==2.6.0
-requests==2.32.3
+requests==2.32.4
 typing_extensions==4.12.2
 setuptools==75.6.0
